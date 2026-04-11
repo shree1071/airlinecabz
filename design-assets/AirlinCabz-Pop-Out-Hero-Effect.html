@@ -1,0 +1,153 @@
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AirlinCabz - Rent A Car, Drive With Ease!</title>
+<!-- Google Fonts: Manrope for headings, Inter for body -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#254BFF', // Vibrant blue matched from image
+            brandDark: '#111827',
+          },
+          fontFamily: {
+            manrope: ['Manrope', 'sans-serif'],
+            inter: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+<style data-purpose="background-gradients">
+    body {
+      background-color: #E2E4E9; /* Consistent light gray aesthetic */
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+<style data-purpose="glassmorphism">
+    .glass-card {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    .shadow-soft {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+    }
+    .shadow-brand {
+      box-shadow: 0 10px 20px -5px rgba(37, 75, 255, 0.3);
+    }
+    /* Natural car shadow */
+    .car-shadow {
+      filter: drop-shadow(0 35px 35px rgba(0, 0, 0, 0.15));
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden">
+<!-- BEGIN: MainHeader -->
+<header class="max-w-7xl mx-auto px-6 py-8 flex items-center justify-between" data-purpose="site-navigation">
+<!-- Logo -->
+<div class="flex items-center gap-1" data-purpose="brand-identity">
+<span class="text-2xl font-black italic tracking-tighter font-manrope text-black">AirlinCabz</span>
+</div>
+<!-- Navigation Menu -->
+<nav class="hidden md:flex items-center bg-white/30 backdrop-blur-md rounded-full px-8 py-2.5 border border-white/40 shadow-sm" data-purpose="main-nav">
+<ul class="flex gap-8 text-sm font-medium text-slate-600">
+<li><a class="text-black hover:text-brandBlue transition-colors" href="#">Home</a></li>
+<li><a class="hover:text-brandBlue transition-colors" href="#">About Us</a></li>
+<li><a class="hover:text-brandBlue transition-colors" href="#">Cars</a></li>
+<li><a class="hover:text-brandBlue transition-colors" href="#">Futures</a></li>
+<li><a class="hover:text-brandBlue transition-colors" href="#">Help</a></li>
+</ul>
+</nav>
+<!-- CTA Button -->
+<button class="bg-brandBlue text-white px-7 py-2.5 rounded-xl font-semibold text-sm shadow-brand hover:bg-blue-700 transition-all">
+      Contact Us
+    </button>
+</header>
+<!-- END: MainHeader -->
+<main class="max-w-7xl mx-auto px-6 pt-12 pb-20">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- BEGIN: HeroTextAndForm -->
+<div class="lg:col-span-5 flex flex-col gap-8">
+<!-- Hero Headline -->
+<div data-purpose="hero-headlines">
+<h1 class="text-5xl lg:text-6xl font-extrabold font-manrope leading-[1.1] text-black">
+            Rent A Car,<br/>
+            Drive With Ease!
+          </h1>
+<p class="mt-6 text-slate-500 max-w-md leading-relaxed text-sm">
+            Affordable, Reliable, And Hassle-Free Car Rentals For Every Journey. Book Your Ride Now!
+          </p>
+</div>
+<!-- Booking Widget -->
+<div class="bg-white/40 backdrop-blur-xl rounded-3xl p-4 shadow-soft border border-white/60 max-w-md" data-purpose="booking-widget">
+<!-- Form Tabs -->
+<div class="flex gap-2 mb-4 p-1 bg-white/20 rounded-xl">
+<button class="flex-1 py-2 px-4 rounded-lg text-xs font-semibold bg-brandBlue text-white">Distance</button>
+<button class="flex-1 py-2 px-4 rounded-lg text-xs font-semibold text-slate-500 hover:bg-white/50 transition-colors">Hourly</button>
+<button class="flex-1 py-2 px-4 rounded-lg text-xs font-semibold text-slate-500 hover:bg-white/50 transition-colors">Flat Rate</button>
+</div>
+<!-- Form Fields -->
+<div class="space-y-2">
+<input class="w-full bg-white/60 border-none rounded-xl py-3 px-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-brandBlue/20" placeholder="Pickup address" type="text"/>
+<input class="w-full bg-white/60 border-none rounded-xl py-3 px-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-brandBlue/20" placeholder="Drop off address" type="text"/>
+<input class="w-full bg-white/60 border-none rounded-xl py-3 px-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-brandBlue/20" placeholder="Pickup date" type="text"/>
+<input class="w-full bg-white/60 border-none rounded-xl py-3 px-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-brandBlue/20" placeholder="Pickup time" type="text"/>
+</div>
+<!-- Submit Button -->
+<button class="w-full mt-4 bg-brandBlue text-white py-4 rounded-xl font-bold text-sm shadow-brand hover:brightness-110 transition-all">
+            Reserve Now
+          </button>
+</div>
+</div>
+<!-- END: HeroTextAndForm -->
+<!-- BEGIN: CarImageSection -->
+<div class="lg:col-span-7 relative flex justify-center lg:justify-end lg:pt-12" data-purpose="hero-visual">
+<!-- Main Car Container - Overflow visible to allow "popping out" effect -->
+<div class="relative bg-white/20 backdrop-blur-lg rounded-[48px] w-full max-w-[640px] h-[400px] flex items-center justify-center overflow-visible border border-white/30 shadow-sm">
+<!-- Floating Badge 1 (Wide Range) - Repositioned for new car image -->
+<div class="absolute top-12 -left-12 bg-white/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-soft border border-white/50 z-30 text-center w-36">
+<p class="text-[11px] font-bold text-slate-700 leading-tight uppercase tracking-wider">Wide Range Of Vehicles</p>
+</div>
+<!-- Floating Badge 2 (Affordable) - Repositioned for new car image -->
+<div class="absolute -top-4 right-12 bg-white/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-soft border border-white/50 z-30 text-center w-36">
+<p class="text-[11px] font-bold text-slate-700 leading-tight uppercase tracking-wider">Affordable Pricing</p>
+</div>
+<!-- Car Image with "Popping Out" Effect -->
+<div class="relative z-20 w-full h-full flex items-center justify-center">
+<!-- -ml-32 and w-[125%] makes it overlap the container boundaries -->
+<img alt="White modern sedan car" class="car-shadow w-[125%] max-w-none relative -ml-32 translate-y-4" src="https://lh3.googleusercontent.com/aida/ADBb0ui5H0j0HW4zktdYgZA9vxIiz5DTgJ0sTnaDTky5ckNhkDz61mrm_KScPC5mHOkTqpy4PyH1akggfLy95VvNQK5plcnSw1Ai_yYxVJX7udQT1Ys-fXeJJaL055UgOhxk4BxLUFDtctqHNOpmKjMi115FfxXKNkcTNtqDOGQrBciEnl9hH8v9RrW2YFnniBglb2NvY9pXL0IrNWh9i6vFB-yWxwXiIFwQ9Pkq4IjxI5J4u_6BDAeSK-6rr3C6_42PVxTvvW3sNMurgA"/>
+</div>
+</div>
+</div>
+<!-- END: CarImageSection -->
+</div>
+<!-- Stats Bar at Bottom -->
+<div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 bg-white/20 backdrop-blur-md rounded-3xl p-8 border border-white/40 shadow-soft" data-purpose="stats-bar">
+<div class="text-center">
+<p class="text-3xl font-extrabold text-black font-manrope">500+</p>
+<p class="text-xs font-semibold text-slate-500 mt-1">Luxury Cars</p>
+</div>
+<div class="text-center">
+<p class="text-3xl font-extrabold text-black font-manrope">12k+</p>
+<p class="text-xs font-semibold text-slate-500 mt-1">Happy Clients</p>
+</div>
+<div class="text-center">
+<p class="text-3xl font-extrabold text-black font-manrope">150+</p>
+<p class="text-xs font-semibold text-slate-500 mt-1">Destinations</p>
+</div>
+<div class="text-center">
+<p class="text-3xl font-extrabold text-black font-manrope">24/7</p>
+<p class="text-xs font-semibold text-slate-500 mt-1">Support</p>
+</div>
+</div>
+</main>
+</body></html>
