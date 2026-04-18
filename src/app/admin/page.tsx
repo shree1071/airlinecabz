@@ -127,6 +127,26 @@ export default function AdminPage() {
     }
   };
 
+  // Handle delete booking
+  const deleteBooking = async (id: string, customerName: string) => {
+    if (!confirm(`Are you sure you want to delete booking for ${customerName}?`)) {
+      return;
+    }
+
+    const { error } = await insforge.database
+      .from("bookings")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting booking:", error);
+      alert("Failed to delete booking");
+    } else {
+      // Remove from local state immediately
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+    }
+  };
+
   // Handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -307,6 +327,14 @@ export default function AdminPage() {
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
+                    
+                    <button
+                      onClick={() => deleteBooking(booking.id, booking.customer_name)}
+                      className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                      title="Delete booking"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
                   </div>
                 </div>
               </div>

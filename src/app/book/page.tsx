@@ -103,7 +103,16 @@ export default function BookingPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    // Prevent double submission
+    if (submitting) {
+      return;
+    }
+
     if (!customerName || !customerEmail || !pickupDate) {
       alert("Please fill in all required fields");
       return;
@@ -619,10 +628,20 @@ export default function BookingPage() {
                 <button 
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full py-4 md:py-5 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-headline font-extrabold text-base md:text-lg shadow-2xl shadow-primary/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 md:gap-3 disabled:opacity-50"
+                  type="button"
+                  className="w-full py-4 md:py-5 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-headline font-extrabold text-base md:text-lg shadow-2xl shadow-primary/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 md:gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                 >
-                  {submitting ? "Submitting..." : "Submit Booking Request"}
-                  <span className="material-symbols-outlined text-lg md:text-xl">double_arrow</span>
+                  {submitting ? (
+                    <>
+                      <span className="animate-spin material-symbols-outlined text-lg md:text-xl">progress_activity</span>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Booking Request
+                      <span className="material-symbols-outlined text-lg md:text-xl">double_arrow</span>
+                    </>
+                  )}
                 </button>
                 <p className="text-[10px] md:text-xs text-center text-slate-500">
                   We will contact you to confirm your booking and payment details
