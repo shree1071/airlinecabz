@@ -25,11 +25,11 @@ export default function Footer() {
             {/* Contact */}
             <div className="flex flex-col gap-2 mt-2">
               <a
-                href="tel:+919742411118"
+                href="tel:+919999999999"
                 className="inline-flex items-center gap-2 text-brandBlue font-bold hover:text-blue-300 transition-colors text-sm"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span>
-                +91 97424 11118
+                +91 99999 99999
               </a>
               <a
                 href="mailto:help@airlincabz.com"
@@ -56,7 +56,7 @@ export default function Footer() {
                 "HAL to Airport",
               ].map((item) => (
                 <li key={item}>
-                  <a href="tel:+919742411118" className="hover:text-white transition-colors hover:underline underline-offset-4">
+                  <a href="tel:+919999999999" className="hover:text-white transition-colors hover:underline underline-offset-4">
                     {item}
                   </a>
                 </li>
@@ -79,7 +79,7 @@ export default function Footer() {
                 "Bangalore to Chennai",
               ].map((item) => (
                 <li key={item}>
-                  <a href="tel:+919742411118" className="hover:text-white transition-colors hover:underline underline-offset-4">
+                  <a href="tel:+919999999999" className="hover:text-white transition-colors hover:underline underline-offset-4">
                     {item}
                   </a>
                 </li>
@@ -94,7 +94,7 @@ export default function Footer() {
               {[
                 { label: "About Us", href: "#futures" },
                 { label: "Blog", href: "#" },
-                { label: "Contact Us", href: "tel:+919742411118" },
+                { label: "Contact Us", href: "tel:+919999999999" },
                 { label: "Privacy Policy", href: "#" },
                 { label: "Terms & Conditions", href: "#" },
               ].map((item) => (
@@ -109,7 +109,7 @@ export default function Footer() {
             {/* Book CTA */}
             <div className="mt-8">
               <a
-                href="tel:+919742411118"
+                href="tel:+919999999999"
                 className="inline-flex items-center gap-2 bg-brandBlue text-white px-6 py-3 rounded-xl font-bold text-sm hover:brightness-110 transition-all shadow-brand"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span>
@@ -129,7 +129,7 @@ export default function Footer() {
             <div className="flex gap-6">
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
               <Link href="#" className="hover:text-white transition-colors">Blog</Link>
-              <Link href="tel:+919742411118" className="hover:text-white transition-colors">Contact us</Link>
+              <Link href="tel:+919999999999" className="hover:text-white transition-colors">Contact us</Link>
               <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="#" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
             </div>
@@ -145,3 +145,4 @@ export default function Footer() {
     </footer>
   );
 }
+
