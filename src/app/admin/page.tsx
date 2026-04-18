@@ -1,176 +1,318 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { insforge } from "@/lib/insforge";
 
-export default function AdminDashboard() {
-  const { user, isLoaded } = useUser();
-  const router = useRouter();
-  const [bookings, setBookings] = useState<any[]>([]);
+type Booking = {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  pickup_location: string;
+  dropoff_location: string;
+  pickup_date: string;
+  vehicle_type: string;
+  base_fare: number;
+  taxes: number;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+const ADMIN_PASSWORD = "admin123"; // Change this to your desired password
+
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<string>("all");
+  const [isConnected, setIsConnected] = useState(false);
 
-  const revenue = bookings.reduce((acc, curr) => {
-    return curr.payment_status !== "unpaid" ? acc + Number(curr.deposit_amount) : acc;
-  }, 0);
-  
-  const pendingCount = bookings.filter(b => b.status === "pending").length;
-
-  useEffect(() => {
-    if (isLoaded && user) {
-      if (user.publicMetadata?.role !== "admin") {
-        router.push("/");
-        return;
-      }
-      fetchBookings();
-    }
-  }, [user, isLoaded, router]);
-
-  const fetchBookings = async () => {
-    try {
-      const res = await fetch("/api/bookings");
-      const data = await res.json();
-      if (data.bookings) setBookings(data.bookings);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Handle login
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      localStorage.setItem("admin_auth", "true");
+    } else {
+      alert("Incorrect password");
     }
   };
 
+  // Check if already authenticated
+  useEffect(() => {
+    const auth = localStorage.getItem("admin_auth");
+    if (auth === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Fetch bookings and setup real-time
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const setupRealtimeAndFetch = async () => {
+      try {
+        // Fetch initial bookings
+        const { data, error } = await insforge.database
+          .from("bookings")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching bookings:", error);
+        } else {
+          setBookings(data || []);
+        }
+        setLoading(false);
+
+        // Connect to real-time
+        await insforge.realtime.connect();
+        setIsConnected(true);
+
+        // Subscribe to bookings channel
+        const subscribeResult = await insforge.realtime.subscribe("bookings");
+        
+        if (!subscribeResult.ok) {
+          console.error("Failed to subscribe:", subscribeResult.error.message);
+          return;
+        }
+
+        // Listen for new bookings
+        insforge.realtime.on("INSERT_booking", (payload: any) => {
+          console.log("New booking:", payload);
+          setBookings((prev) => [payload, ...prev]);
+        });
+
+        // Listen for booking updates
+        insforge.realtime.on("UPDATE_booking", (payload: any) => {
+          console.log("Booking updated:", payload);
+          setBookings((prev) =>
+            prev.map((b) => (b.id === payload.id ? { ...b, ...payload } : b))
+          );
+        });
+
+        // Listen for booking deletions
+        insforge.realtime.on("DELETE_booking", (payload: any) => {
+          console.log("Booking deleted:", payload);
+          setBookings((prev) => prev.filter((b) => b.id !== payload.id));
+        });
+
+      } catch (err) {
+        console.error("Setup error:", err);
+        setLoading(false);
+      }
+    };
+
+    setupRealtimeAndFetch();
+
+    // Cleanup
+    return () => {
+      insforge.realtime.unsubscribe("bookings");
+      insforge.realtime.disconnect();
+    };
+  }, [isAuthenticated]);
+
+  // Handle status update
   const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      await fetch(`/api/bookings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      fetchBookings();
-    } catch (err) {
-      console.error(err);
+    const { error } = await insforge.database
+      .from("bookings")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating status:", error);
       alert("Failed to update status");
     }
   };
 
-  const filteredBookings = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("admin_auth");
+    setPassword("");
+  };
 
-  if (!isLoaded || loading) return <div className="p-12 text-center font-bold">Loading Admin...</div>;
+  // Filter bookings
+  const filteredBookings = filter === "all" 
+    ? bookings 
+    : bookings.filter(b => b.status === filter);
 
-  return (
-    <div className="bg-surface text-on-surface min-h-screen">
-      <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
-        <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-900">directions_car</span>
-            <h1 className="text-xl font-bold tracking-tighter text-blue-900 font-headline">AirlinCabz <span className="text-sm font-medium text-outline">Admin</span></h1>
+  // Login screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-md w-full">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-white text-3xl">admin_panel_settings</span>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Login</h1>
+            <p className="text-slate-600">Enter password to access bookings</p>
           </div>
-          <button onClick={() => router.push("/")} className="text-sm font-bold text-slate-500 hover:text-blue-900">Exit Admin</button>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none transition-colors"
+                placeholder="Enter admin password"
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin dashboard
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-white">admin_panel_settings</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Admin Dashboard</h1>
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                <span className="text-slate-600">{isConnected ? 'Live' : 'Disconnected'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
-      <main className="pt-24 pb-24 px-4 space-y-6 max-w-3xl mx-auto">
-        {/* Stats Grid */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="col-span-2 md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-6 rounded-3xl text-on-primary shadow-lg">
-            <p className="text-on-primary-container text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue (Deposits)</p>
-            <h2 className="text-3xl font-extrabold font-headline tracking-tight">₹{revenue.toLocaleString()}</h2>
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm">
+            <p className="text-xs md:text-sm text-slate-600 mb-1">Total Bookings</p>
+            <p className="text-2xl md:text-3xl font-bold text-slate-900">{bookings.length}</p>
           </div>
-          <div className="bg-surface-container-lowest p-5 rounded-3xl shadow-sm">
-            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-blue-900 text-sm">calendar_today</span>
-            </div>
-            <p className="text-outline text-[10px] font-bold uppercase tracking-tight">Total Bookings</p>
-            <p className="text-xl font-bold text-on-surface">{bookings.length}</p>
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm">
+            <p className="text-xs md:text-sm text-slate-600 mb-1">Pending</p>
+            <p className="text-2xl md:text-3xl font-bold text-orange-600">
+              {bookings.filter(b => b.status === 'pending').length}
+            </p>
           </div>
-          <div className="bg-surface-container-lowest p-5 rounded-3xl shadow-sm">
-            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-amber-600 text-sm">pending</span>
-            </div>
-            <p className="text-outline text-[10px] font-bold uppercase tracking-tight">Pending</p>
-            <p className="text-xl font-bold text-on-surface">{pendingCount}</p>
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm">
+            <p className="text-xs md:text-sm text-slate-600 mb-1">Confirmed</p>
+            <p className="text-2xl md:text-3xl font-bold text-blue-600">
+              {bookings.filter(b => b.status === 'confirmed').length}
+            </p>
           </div>
-        </section>
+          <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm">
+            <p className="text-xs md:text-sm text-slate-600 mb-1">Completed</p>
+            <p className="text-2xl md:text-3xl font-bold text-green-600">
+              {bookings.filter(b => b.status === 'completed').length}
+            </p>
+          </div>
+        </div>
 
         {/* Filters */}
-        <section className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-          {["all", "pending", "confirmed", "completed", "cancelled"].map((f) => (
-            <button 
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide flex-shrink-0 transition-colors ${
-                filter === f ? "bg-primary text-white" : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </section>
-
-        {/* Booking List */}
-        <section className="space-y-4">
-          <div className="flex justify-between items-end mb-2">
-            <h3 className="text-lg font-bold font-headline text-blue-900">Recent Bookings</h3>
-            <span className="text-[10px] font-bold text-outline uppercase tracking-widest">Live Updates</span>
+        <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  filter === status
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {filteredBookings.length === 0 && (
-            <div className="text-center text-outline py-12">No bookings found in this category.</div>
-          )}
-
-          {filteredBookings.map((b) => (
-            <div key={b.id} className="bg-surface-container-lowest p-5 rounded-3xl shadow-sm border border-transparent hover:border-primary/10 transition-all">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <p className="text-[10px] font-bold text-primary tracking-tighter bg-primary-fixed px-2 py-0.5 rounded-md">
-                      {b.id.split("-")[0].toUpperCase()}
-                    </p>
-                    <span className={`status-${b.status === 'pending' ? 'pending' : b.status === 'cancelled' ? 'cancelled' : 'confirmed'}`}>
-                      {b.status}
-                    </span>
+        {/* Bookings List */}
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-slate-600">Loading bookings...</p>
+          </div>
+        ) : filteredBookings.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+            <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">inbox</span>
+            <p className="text-slate-600">No bookings found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredBookings.map((booking) => (
+              <div
+                key={booking.id}
+                className="bg-white rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-blue-600">person</span>
+                      <span className="font-bold text-slate-900">{booking.customer_name}</span>
+                      <span className="text-xs text-slate-500">{booking.customer_email}</span>
+                    </div>
+                    
+                    <div className="flex items-start gap-2 text-sm">
+                      <span className="material-symbols-outlined text-green-600 text-base">location_on</span>
+                      <div>
+                        <p className="text-slate-700">{booking.pickup_location}</p>
+                        <p className="text-slate-500 text-xs">to {booking.dropoff_location}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+                      <span>🚗 {booking.vehicle_type}</span>
+                      <span>📅 {new Date(booking.pickup_date).toLocaleString()}</span>
+                      <span className="font-semibold text-slate-900">₹{booking.total_amount}</span>
+                    </div>
                   </div>
-                  <h4 className="text-base font-bold text-on-surface">{b.customer_name}</h4>
-                  <p className="text-xs text-outline">{b.customer_email}</p>
                   
-                  <div className="mt-3 text-sm">
-                    <div className="flex items-center gap-1 text-on-surface-variant"><span className="material-symbols-outlined text-[14px]">flight_takeoff</span> {b.pickup_location}</div>
-                    <div className="flex items-center gap-1 text-on-surface-variant mt-1"><span className="material-symbols-outlined text-[14px]">flight_land</span> {b.dropoff_location}</div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={booking.status}
+                      onChange={(e) => updateStatus(booking.id, e.target.value)}
+                      className={`px-3 py-2 rounded-xl text-sm font-semibold border-2 transition-colors ${
+                        booking.status === 'pending' ? 'border-orange-200 bg-orange-50 text-orange-700' :
+                        booking.status === 'confirmed' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                        booking.status === 'completed' ? 'border-green-200 bg-green-50 text-green-700' :
+                        'border-red-200 bg-red-50 text-red-700'
+                      }`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </div>
                 </div>
-
-                <div className="flex flex-row md:flex-col items-center md:items-end justify-between border-t md:border-none pt-4 md:pt-0">
-                  <div className="text-left md:text-right mb-0 md:mb-4">
-                    <p className="text-[10px] text-outline font-bold uppercase tracking-wider">Fare</p>
-                    <p className="font-bold text-blue-900">₹{b.total_amount}</p>
-                    <p className="text-[10px] text-outline">Paid: ₹{b.deposit_amount}</p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {b.status === "pending" && (
-                      <>
-                        <button onClick={() => updateStatus(b.id, "confirmed")} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center hover:bg-emerald-200">
-                          <span className="material-symbols-outlined text-sm text-emerald-700">check</span>
-                        </button>
-                        <button onClick={() => updateStatus(b.id, "cancelled")} className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center hover:bg-red-200">
-                          <span className="material-symbols-outlined text-sm text-red-700">close</span>
-                        </button>
-                      </>
-                    )}
-                    {b.status === "confirmed" && (
-                      <button onClick={() => updateStatus(b.id, "completed")} className="px-3 py-1 bg-primary text-white text-xs font-bold rounded-full">
-                        Mark Complete
-                      </button>
-                    )}
-                  </div>
-                </div>
-
               </div>
-            </div>
-          ))}
-        </section>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

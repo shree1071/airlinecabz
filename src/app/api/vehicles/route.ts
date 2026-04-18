@@ -7,6 +7,7 @@ export async function GET() {
       .from("vehicle_types")
       .select("*")
       .eq("is_active", true)
+      .eq("vehicle_category", "airport")
       .order("sort_order", { ascending: true });
 
     if (error) {

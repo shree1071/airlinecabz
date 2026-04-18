@@ -1,0 +1,26 @@
+name,slug,base_fare,per_km_rate,image_url,is_ev,is_active,sort_order,capacity,vehicle_category
+Hatchback,hatchback,799,0,/imgi_4_mini.png,false,true,1,3+1,airport
+Swift Dzire,swift-dzire,899,0,/imgi_5_swift.jpg,false,true,2,4+1,airport
+Toyota Etios,toyota-etios,1049,0,/imgi_6_etios.png,false,true,3,4+1,airport
+Swift Dzire CNG w/ Carrier,swift-dzire-cng,1100,0,/imgi_5_swift.jpg,false,true,4,4+1,airport
+New Swift Dzire,new-swift-dzire,1100,0,/imgi_5_swift.jpg,false,true,5,4+1,airport
+Ertiga SUV,ertiga-suv,1699,0,/imgi_8_ertiga.jpg,false,true,6,6+1,airport
+Toyota Innova,toyota-innova,1799,0,/imgi_9_innova.png,false,true,7,7+1,airport
+Toyota Innova Crysta,toyota-innova-crysta,1999,0,/imgi_10_crysta.png,false,true,8,7+1,airport
+Innova Hycross,innova-hycross,2499,0,/imgi_11_hycross.jpg,false,true,9,7+1,airport
+Tempo Traveller NON AC,tempo-traveller-non-ac,3599,0,/imgi_12_tt.jpg,false,true,10,12+1,airport
+Tempo Traveller AC,tempo-traveller-ac,3999,0,/imgi_12_tt.jpg,false,true,11,12+1,airport
+Sedan (Outstation),sedan-outstation,0,12,/imgi_7_Verito.jpg,false,true,12,4+1,outstation
+New Swift Dzire / Etios (Outstation),swift-dzire-etios-outstation,0,13,/imgi_5_swift.jpg,false,true,13,4+1,outstation
+Toyota Innova (Outstation),toyota-innova-outstation,0,16,/imgi_9_innova.png,false,true,14,7+1,outstation
+Ertiga SUV (Outstation),ertiga-suv-outstation,0,16,/imgi_8_ertiga.jpg,false,true,15,6+1,outstation
+Toyota Innova Crysta (Outstation),toyota-innova-crysta-outstation,0,18,/imgi_10_crysta.png,false,true,16,7+1,outstation
+Tempo Traveller (Outstation),tempo-traveller-outstation,0,19,/imgi_12_tt.jpg,false,true,17,12+1,outstation
+Innova Hycross (Outstation),innova-hycross-outstation,0,22,/imgi_11_hycross.jpg,false,true,18,7+1,outstation
+Sedan (4hrs 40km),sedan-4hrs-40km,1300,15,/imgi_7_Verito.jpg,false,true,19,4+1,local
+Sedan (8hrs 80km),sedan-8hrs-80km,2100,15,/imgi_7_Verito.jpg,false,true,20,4+1,local
+Ertiga SUV (Local),ertiga-suv-local,2799,20,/imgi_8_ertiga.jpg,false,true,21,6+1,local
+Toyota Innova (Local),toyota-innova-local,3200,20,/imgi_9_innova.png,false,true,22,7+1,local
+Toyota Innova Crysta (Local),toyota-innova-crysta-local,3499,20,/imgi_10_crysta.png,false,true,23,7+1,local
+Tempo Traveller (Local),tempo-traveller-local,4499,25,/imgi_12_tt.jpg,false,true,24,12+1,local
+Innova Hycross (Local),innova-hycross-local,4499,30,/imgi_11_hycross.jpg,false,true,25,7+1,local

@@ -1,32 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { insforge } from "@/lib/insforge";
 
 export async function GET(req: Request) {
   try {
-    const { userId, sessionClaims } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
-
-    // Check if user is admin
-    const isAdmin = (sessionClaims?.metadata as any)?.role === "admin";
 
     let query = insforge.database
       .from("bookings")
       .select("*")
       .order("created_at", { ascending: false });
 
-    // If not admin, only fetch their own bookings
-    if (!isAdmin) {
-      query = query.eq("clerk_user_id", userId);
-    }
-
-    // Filter by status if provided
     if (status && status !== "all") {
       query = query.eq("status", status);
     }
@@ -47,15 +31,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await req.json();
 
-    // Basic validation
     if (
       !body.customer_name ||
       !body.customer_email ||
@@ -69,10 +46,8 @@ export async function POST(req: Request) {
     }
 
     const newBooking = {
-      clerk_user_id: userId,
       customer_name: body.customer_name,
       customer_email: body.customer_email,
-      customer_phone: body.customer_phone || null,
       pickup_location: body.pickup_location,
       dropoff_location: body.dropoff_location,
       pickup_date: new Date(body.pickup_date).toISOString(),
@@ -80,9 +55,7 @@ export async function POST(req: Request) {
       base_fare: body.base_fare || 0,
       taxes: body.taxes || 0,
       total_amount: body.total_amount,
-      deposit_amount: body.deposit_amount || 500,
-      status: "pending",
-      payment_status: "unpaid",
+      status: body.status || "pending",
     };
 
     const { data, error } = await insforge.database

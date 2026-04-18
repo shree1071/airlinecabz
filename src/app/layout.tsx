@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -24,8 +23,6 @@ export const metadata: Metadata = {
   keywords: ["cab booking", "premium taxi", "airport transfer", "chauffeur service", "luxury rides"],
 };
 
-import Script from "next/script";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,10 +40,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
-        <ClerkProvider>
-          {children}
-          <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-        </ClerkProvider>
+        {children}
       </body>
     </html>
   );

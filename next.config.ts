@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
+  experimental: {
+    optimizePackageImports: ['@react-google-maps/api'],
+  },
   images: {
     remotePatterns: [
       {
@@ -12,10 +16,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
         pathname: "/aida/**",
-      },
-      {
-        protocol: "https",
-        hostname: "img.clerk.com",
       },
     ],
   },

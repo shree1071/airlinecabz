@@ -19,8 +19,11 @@ export default function MobileBottomNav() {
         return (
           <Link
             key={tab.label}
+
             href={tab.href}
+
             className={`flex flex-col items-center justify-center px-5 py-2 active:scale-90 transition-all duration-150 ${
+
               isActive
                 ? "bg-blue-50 text-blue-900 rounded-2xl"
                 : "text-slate-400 hover:text-blue-800"
