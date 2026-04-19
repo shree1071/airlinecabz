@@ -7,6 +7,7 @@ type Booking = {
   id: string;
   customer_name: string;
   customer_email: string;
+  trip_type?: string;
   pickup_location: string;
   dropoff_location: string;
   pickup_date: string;
@@ -116,14 +117,77 @@ export default function AdminPage() {
 
   // Handle status update
   const updateStatus = async (id: string, newStatus: string) => {
-    const { error } = await insforge.database
-      .from("bookings")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    // If confirming a booking, show payment confirmation dialog
+    if (newStatus === 'confirmed') {
+      const paymentMethod = prompt('Payment Method (cash/online/card):');
+      if (!paymentMethod) return;
 
-    if (error) {
-      console.error("Error updating status:", error);
-      alert("Failed to update status");
+      const driverName = prompt('Assign Driver Name (optional):');
+      const driverPhone = prompt('Driver Phone (optional):');
+      const vehicleNumber = prompt('Vehicle Number (optional):');
+
+      // Get the booking details
+      const booking = bookings.find(b => b.id === id);
+      if (!booking) return;
+
+      try {
+        // Move to confirmed_rides table
+        const { error: insertError } = await insforge.database
+          .from('confirmed_rides')
+          .insert([{
+            booking_id: id,
+            customer_name: booking.customer_name,
+            customer_email: booking.customer_email,
+            trip_type: booking.trip_type || 'to_airport',
+            pickup_location: booking.pickup_location,
+            dropoff_location: booking.dropoff_location,
+            pickup_date: booking.pickup_date,
+            vehicle_type: booking.vehicle_type,
+            base_fare: booking.base_fare,
+            taxes: booking.taxes,
+            total_amount: booking.total_amount,
+            payment_method: paymentMethod,
+            payment_status: 'paid',
+            ride_status: 'scheduled',
+            driver_name: driverName || null,
+            driver_phone: driverPhone || null,
+            vehicle_number: vehicleNumber || null,
+          }]);
+
+        if (insertError) {
+          console.error('Error creating confirmed ride:', insertError);
+          alert('Failed to confirm booking');
+          return;
+        }
+
+        // Update booking status
+        const { error: updateError } = await insforge.database
+          .from('bookings')
+          .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+          .eq('id', id);
+
+        if (updateError) {
+          console.error('Error updating booking:', updateError);
+          alert('Failed to update booking status');
+          return;
+        }
+
+        alert('Booking confirmed and moved to active rides!');
+      } catch (err) {
+        console.error('Error confirming booking:', err);
+        alert('Failed to confirm booking');
+      }
+    } else {
+      // Regular status update
+      const { error } = await insforge.database
+        .from('bookings')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating status:', error);
+        alert('Failed to update status');
+      }
     }
   };
 
@@ -216,12 +280,21 @@ export default function AdminPage() {
             </div>
           </div>
           
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-          >
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href="/admin/rides"
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">directions_car</span>
+              Active Rides
+            </a>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
