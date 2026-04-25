@@ -17,10 +17,30 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AirlinCabz | Premium Mobility Solutions",
+  title: "AirlinCabz | Premium Airport Taxi & Outstation Cabs in Bangalore",
   description:
-    "Experience the pinnacle of urban mobility. From airport transfers to executive travel, AirlinCabz delivers precision, comfort, and reliability in every mile.",
-  keywords: ["cab booking", "premium taxi", "airport transfer", "chauffeur service", "luxury rides"],
+    "Book premium airport taxis, outstation cabs, and local rentals in Bangalore. Experience safe, reliable, and comfortable rides with our fleet of Innova Crysta, TT, and Sedans at competitive prices.",
+  keywords: [
+    "cab booking bangalore", 
+    "airport taxi bangalore", 
+    "outstation cabs bangalore", 
+    "innova crysta rental", 
+    "tempo traveller booking", 
+    "force urbania rent bangalore",
+    "cheap airport taxi"
+  ],
+  openGraph: {
+    title: "AirlinCabz | Premium Airport Taxi & Outstation Cabs",
+    description: "Book premium airport taxis, outstation cabs, and local rentals in Bangalore. Safe, reliable, and comfortable rides.",
+    type: "website",
+    locale: "en_IN",
+    siteName: "AirlinCabz"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AirlinCabz | Premium Airport Taxi",
+    description: "Book premium airport taxis, outstation cabs, and local rentals in Bangalore.",
+  }
 };
 
 export default function RootLayout({

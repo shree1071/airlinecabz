@@ -34,11 +34,13 @@ const airportPrices = [
 const outstationPrices = [
   { vehicle: "Sedan", capacity: "4+1", rate: 12, bata: 350, img: "/imgi_7_Verito.jpg" },
   { vehicle: "New Swift Dzire / Etios", capacity: "4+1", rate: 13, bata: 350, img: "/imgi_5_swift.jpg" },
-  { vehicle: "Toyota Innova", capacity: "7+1", rate: 16, bata: 400, img: "/imgi_9_innova.png" },
   { vehicle: "Ertiga SUV", capacity: "6+1", rate: 16, bata: 400, img: "/imgi_8_ertiga.jpg" },
-  { vehicle: "Toyota Innova Crysta", capacity: "7+1", rate: 18, bata: 400, img: "/imgi_10_crysta.png", highlight: true },
-  { vehicle: "Tempo Traveller", capacity: "12+1", rate: 19, bata: 500, img: "/imgi_12_tt.jpg" },
+  { vehicle: "Toyota Innova", capacity: "7+1", rate: 17, bata: 400, img: "/imgi_9_innova.png" },
+  { vehicle: "Toyota Innova Crysta", capacity: "7+1", rate: 20, bata: 400, img: "/imgi_10_crysta.png", highlight: true },
+  { vehicle: "Tempo Traveller NON AC", capacity: "12+1", rate: 20, bata: 500, img: "/imgi_12_tt.jpg" },
+  { vehicle: "Tempo Traveller AC", capacity: "12+1", rate: 22, bata: 500, img: "/imgi_12_tt.jpg" },
   { vehicle: "Innova Hycross", capacity: "7+1", rate: 22, bata: 500, img: "/imgi_11_hycross.jpg" },
+  { vehicle: "Force Urbania", capacity: "17+1", rate: 42, bata: 600, img: "/imgi_12_tt.jpg" },
 ];
 
 /* ── Local Taxi Prices ── */
@@ -74,12 +76,22 @@ const outstationDestinations = [
 /* ── Why Us features ── */
 const whyUs = [
   { icon: "verified_user", title: "Safe, Secured & Reliable", desc: "We take care of everything, making you comfortable and safe during every journey." },
-  { icon: "price_check", title: "Best Price Guaranteed", desc: "We charge fewer fees than our competitors with complete transparency on total cost." },
-  { icon: "schedule", title: "In-Time Pick-up", desc: "Verified drivers ensuring quick and comfortable rides with on-time pickups every time." },
+  { icon: "price_check", title: "Competitive Pricing", desc: "We offer the most competitive rates in the market with complete transparency on total cost." },
+  { icon: "thumb_up", title: "Low Cancellation Rate", desc: "Count on us for your travel plans. Our ultra-low cancellation rate ensures you're never stranded." },
   { icon: "support_agent", title: "24×7 Support", desc: "We operate 24 hours a day, 7 days a week, 365 days a year — always here for you." },
 ];
 
 type Tab = "airport" | "outstation" | "local";
+
+function isPremiumCab(vehicle: string) {
+  const v = vehicle.toLowerCase();
+  return v.includes("crysta") || v.includes("hycross") || v.includes("tempo traveller") || v.includes("urbania");
+}
+
+function getWhatsAppLink(vehicle: string) {
+  const message = `Hello I want to book a Premium Cab (${vehicle})`;
+  return `https://wa.me/919999999999?text=${encodeURIComponent(message)}`;
+}
 
 /* ── Shared Vehicle Card Image Block ── */
 function VehicleImage({ src, alt, highlight }: { src: string; alt: string; highlight?: boolean }) {
@@ -115,6 +127,8 @@ export default function LandingPage() {
           fill
           className="object-cover object-center scale-105"
           priority
+          quality={100}
+          unoptimized
           sizes="100vw"
         />
         {/* Gradient overlays for cinematic effect */}
@@ -345,15 +359,18 @@ export default function LandingPage() {
                         + Toll ₹{item.toll} extra
                       </p>
                       <a
-                        href="tel:+919999999999"
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
                             ? "bg-white text-brandBlue hover:bg-blue-50"
                             : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">call</span>
-                        Book Now
+                        <span className="material-symbols-outlined text-[14px]">
+                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                        </span>
+                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
                       </a>
                     </div>
                   ))}
@@ -364,7 +381,7 @@ export default function LandingPage() {
             {/* ── Outstation Tab ── */}
             {activeTab === "outstation" && (
               <div>
-                <p className="text-center text-slate-500 text-xs sm:text-sm mb-6 sm:mb-8 px-4">Outstation taxi pickup and drop with 24×7 customer support. Toll and parking charges extra.</p>
+                <p className="text-center text-slate-500 text-xs sm:text-sm mb-6 sm:mb-8 px-4">Outstation taxi pickup and drop with 24×7 customer support. Toll and parking as applicable extra.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 sm:px-0">
                   {outstationPrices.map((item) => (
                     <div
@@ -393,15 +410,18 @@ export default function LandingPage() {
                         Bata ₹{item.bata}/day · Toll &amp; parking extra
                       </p>
                       <a
-                        href="tel:+919999999999"
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
                             ? "bg-white text-brandBlue hover:bg-blue-50"
                             : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">call</span>
-                        Book Now
+                        <span className="material-symbols-outlined text-[14px]">
+                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                        </span>
+                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
                       </a>
                     </div>
                   ))}
@@ -444,15 +464,18 @@ export default function LandingPage() {
                         Extra: ₹{item.extraKm}/km · ₹{item.extraHr}/hr
                       </p>
                       <a
-                        href="tel:+919999999999"
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
                             ? "bg-white text-brandBlue hover:bg-blue-50"
                             : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">call</span>
-                        Book Now
+                        <span className="material-symbols-outlined text-[14px]">
+                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                        </span>
+                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
                       </a>
                     </div>
                   ))}
