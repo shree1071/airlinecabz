@@ -98,98 +98,166 @@ function VehicleImage({ src, alt, highlight }: { src: string; alt: string; highl
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<Tab>("airport");
+  const [tripType, setTripType] = useState("One Way");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   return (
     <>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+      {/* ═══ FULL-BLEED HERO ═══ */}
+      <section className="relative w-full h-[92vh] min-h-[600px] max-h-[900px] overflow-hidden">
+        {/* Airport terminal background */}
+        <Image
+          src="/airport-terminal-hero.png"
+          alt="Bangalore Airport Terminal"
+          fill
+          className="object-cover object-center scale-105"
+          priority
+          sizes="100vw"
+        />
+        {/* Gradient overlays for cinematic effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/70 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent z-10" />
 
-          {/* Hero Text & CTA */}
-          <div className="lg:col-span-5 flex flex-col gap-6 sm:gap-8">
-            <div data-purpose="hero-headlines">
-              <div className="inline-flex items-center gap-2 bg-blue-50 text-brandBlue rounded-full px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs font-bold tracking-wide mb-3 sm:mb-4 border border-blue-100">
-                <span className="material-symbols-outlined text-[12px] sm:text-[14px]">local_taxi</span>
-                Bangalore&apos;s #1 Airport Taxi Service
-              </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-headline leading-[1.1] text-brandDark">
-                Your Journey,<br />
-                <span className="text-brandBlue">Our Priority</span>
-              </h1>
-              <p className="mt-4 sm:mt-6 text-slate-500 max-w-md leading-relaxed text-sm sm:text-base">
-                Reliable airport transfers with professional drivers. From airport to home or vice versa, we've got you covered. Starting at ₹799/-
-              </p>
-            </div>
+        {/* Hero content */}
+        <div className="relative z-20 h-full flex flex-col justify-between pb-8">
+          {/* Top spacer for navbar */}
+          <div className="h-24" />
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href="tel:+919999999999"
-                className="flex items-center justify-center gap-2 bg-brandBlue text-white py-3.5 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl font-bold text-sm shadow-brand hover:brightness-110 transition-all active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[18px]">call</span>
-                <span className="whitespace-nowrap">Book Now +91 99999 99999</span>
-              </a>
-              <Link
-                href="/book"
-                className="flex items-center justify-center gap-2 bg-white text-brandDark border border-slate-200 py-3.5 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                Book Online
-              </Link>
-            </div>
-
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {["24×7 Support", "Verified Drivers", "Best Price", "On-Time Pickup"].map((badge) => (
-                <span key={badge} className="inline-flex items-center gap-1.5 bg-white/70 backdrop-blur border border-slate-200/70 text-slate-600 text-[10px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
-                  {badge}
-                </span>
-              ))}
-            </div>
+          {/* Main headline */}
+          <div className="px-6 sm:px-10 lg:px-20 max-w-5xl">
+            <p className="text-white/70 text-sm sm:text-base font-semibold tracking-[0.2em] uppercase mb-3 drop-shadow">
+              Bangalore Airport Taxi
+            </p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-2xl">
+              Hey Buddy!<br />
+              <span className="text-amber-300">where are you</span><br />
+              Flying to?
+            </h1>
+            <p className="mt-4 text-white/75 text-sm sm:text-base max-w-md leading-relaxed drop-shadow">
+              Premium airport transfers across Bangalore. Safe, professional, and on time — starting at just ₹799.
+            </p>
+            <a
+              href="#booking-panel"
+              className="mt-6 inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-sm px-6 py-3 rounded-full transition-all duration-300 hover:scale-105"
+            >
+              <span className="material-symbols-outlined text-[18px]">explore</span>
+              Explore Now
+            </a>
           </div>
 
-          {/* Hero Visual */}
-          <div className="lg:col-span-7 relative flex justify-center lg:justify-end mt-8 lg:mt-0">
-            <div className="relative glass-card rounded-3xl sm:rounded-[40px] w-full max-w-[580px] h-[280px] sm:h-[350px] lg:h-[400px] flex items-center justify-center overflow-visible">
-
-              {/* Floating Badge 1 */}
-              <div className="absolute -top-4 sm:-top-6 lg:-top-12 left-4 sm:left-1/4 bg-white/90 backdrop-blur px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-soft border border-white/50 z-20 text-center w-28 sm:w-36 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-                <p className="text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-wide">Fare From</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-brandDark">₹799</p>
-                <p className="text-[9px] sm:text-[10px] text-slate-500">Airport Transfer</p>
+          {/* ── Booking Panel ── */}
+          <div id="booking-panel" className="mx-4 sm:mx-6 lg:mx-20 mt-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
+              {/* Panel tabs */}
+              <div className="flex border-b border-slate-100">
+                {[
+                  { label: "Airport Taxi", icon: "flight" },
+                  { label: "Outstation", icon: "map" },
+                  { label: "Local Hire", icon: "location_city" },
+                ].map((t) => (
+                  <button
+                    key={t.label}
+                    onClick={() => setActiveTab(t.label === "Airport Taxi" ? "airport" : t.label === "Outstation" ? "outstation" : "local")}
+                    className={`flex items-center gap-1.5 px-4 sm:px-6 py-3.5 text-xs sm:text-sm font-bold transition-all border-b-2 ${
+                      (t.label === "Airport Taxi" && activeTab === "airport") ||
+                      (t.label === "Outstation" && activeTab === "outstation") ||
+                      (t.label === "Local Hire" && activeTab === "local")
+                        ? "border-brandBlue text-brandBlue bg-blue-50/50"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
+                    {t.label}
+                  </button>
+                ))}
               </div>
 
-              {/* Floating Badge 2 */}
-              <div className="absolute top-12 sm:top-16 lg:top-10 -left-2 sm:-left-4 lg:-left-6 bg-white/90 backdrop-blur px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-soft border border-white/50 z-20 text-center w-28 sm:w-36 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-                <p className="text-[10px] sm:text-[11px] font-bold text-slate-800 leading-tight">Innova Crysta<br />₹1,999/-</p>
-              </div>
+              {/* Search fields */}
+              <div className="p-4 sm:p-6">
+                {/* Trip type row */}
+                <div className="flex gap-3 mb-4">
+                  {["One Way", "Round Trip"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setTripType(type)}
+                      className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full transition-all ${
+                        tripType === type
+                          ? "bg-brandDark text-white"
+                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {type === "One Way" ? "arrow_forward" : "repeat"}
+                      </span>
+                      {type}
+                    </button>
+                  ))}
+                </div>
 
-              {/* Floating Badge 3 */}
-              <div className="absolute -bottom-3 sm:-bottom-4 right-2 sm:right-4 bg-brandBlue text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-brand z-20 text-center w-32 sm:w-40 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wide opacity-80">Customer Rating</p>
-                <p className="text-xl sm:text-2xl font-extrabold">4.9 ⭐</p>
-              </div>
+                {/* Input fields row */}
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto_auto] gap-3 items-center">
+                  {/* From */}
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-brandBlue text-[20px]">my_location</span>
+                    <input
+                      type="text"
+                      placeholder="Pickup location"
+                      value={from}
+                      onChange={(e) => setFrom(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-brandDark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brandBlue/20 focus:border-brandBlue transition-all"
+                    />
+                  </div>
 
-              <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
-                <Image
-                  alt="Airport Taxi Service Bangalore"
-                  className="w-full h-auto object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.25)] relative z-30"
-                  src="/hero-car.png"
-                  width={1000}
-                  height={600}
-                  priority
-                />
+                  {/* Swap icon */}
+                  <button
+                    onClick={() => { const tmp = from; setFrom(to); setTo(tmp); }}
+                    className="hidden sm:flex w-9 h-9 rounded-full bg-slate-100 hover:bg-brandBlue hover:text-white text-slate-400 items-center justify-center transition-all shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+                  </button>
+
+                  {/* To */}
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">flight_takeoff</span>
+                    <input
+                      type="text"
+                      placeholder={activeTab === "airport" ? "Kempegowda Intl. Airport" : "Destination"}
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-brandDark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brandBlue/20 focus:border-brandBlue transition-all"
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">calendar_month</span>
+                    <input
+                      type="date"
+                      className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-brandBlue/20 focus:border-brandBlue transition-all"
+                    />
+                  </div>
+
+                  {/* Search CTA */}
+                  <Link
+                    href="/book"
+                    className="flex items-center justify-center gap-2 bg-brandBlue text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-brand hover:brightness-110 hover:scale-105 transition-all whitespace-nowrap"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">search</span>
+                    Search Cabs
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
+      </section>
 
-        {/* Stats Bar */}
-        <div id="about" className="mt-12 sm:mt-20 lg:mt-32 bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-[32px] border border-white/60 p-6 sm:p-8 py-8 sm:py-10 shadow-soft">
+      {/* Stats Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div id="about" className="mt-6 sm:mt-10 bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-[32px] border border-white/60 p-6 sm:p-8 py-8 sm:py-10 shadow-soft">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div className="flex flex-col items-center justify-center border-r border-slate-300">
               <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark">50k+</span>
@@ -209,8 +277,9 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </div>
 
-      </main>
+      <main className="pb-20">
 
       {/* ───── Main Content ───── */}
       <div className="bg-white/80 backdrop-blur-sm rounded-t-[3rem] mt-12 pt-20 border-t border-white/90 shadow-[0_-20px_40px_rgba(0,0,0,0.02)]">
@@ -605,6 +674,7 @@ export default function LandingPage() {
         <Footer />
         <MobileBottomNav />
       </div>
+      </main>
     </>
   );
 }
