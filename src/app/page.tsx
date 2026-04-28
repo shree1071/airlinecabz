@@ -564,14 +564,19 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-3 justify-center">
               {airportAreas.map((area) => (
-                <a
-                  key={area}
-                  href="tel:+919901366449"
-                  className="group inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-brandBlue hover:bg-brandBlue hover:text-white text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-200"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-brandBlue group-hover:text-white transition-colors">flight_takeoff</span>
-                  {area} to Airport
-                </a>
+                <div key={area} className="flex flex-col gap-2">
+                  <div className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm">
+                    <span className="material-symbols-outlined text-[16px] text-brandBlue">flight_takeoff</span>
+                    {area} to Airport
+                  </div>
+                  <Link
+                    href="/book"
+                    className="inline-flex items-center justify-center gap-1.5 bg-brandBlue text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                    Book Online
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
@@ -590,14 +595,19 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-3 justify-center">
               {outstationDestinations.map((dest) => (
-                <a
-                  key={dest}
-                  href="tel:+919901366449"
-                  className="group inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-brandBlue hover:bg-brandBlue hover:text-white text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-200"
-                >
-                  <span className="material-symbols-outlined text-[16px] text-brandBlue group-hover:text-white transition-colors">map</span>
-                  Bangalore to {dest}
-                </a>
+                <div key={dest} className="flex flex-col gap-2">
+                  <div className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm">
+                    <span className="material-symbols-outlined text-[16px] text-brandBlue">map</span>
+                    Bangalore to {dest}
+                  </div>
+                  <Link
+                    href="/book"
+                    className="inline-flex items-center justify-center gap-1.5 bg-brandBlue text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                    Book Online
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
