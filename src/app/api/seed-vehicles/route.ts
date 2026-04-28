@@ -138,6 +138,18 @@ export async function POST() {
         capacity: "12+1",
         vehicle_category: "airport"
       },
+      {
+        name: "Force Urbania",
+        slug: "force-urbania",
+        base_fare: 4999,
+        per_km_rate: 0,
+        image_url: "/force-urbania.jpg",
+        is_ev: false,
+        is_active: true,
+        sort_order: 12,
+        capacity: "13+1",
+        vehicle_category: "airport"
+      },
       // Outstation Vehicles
       {
         name: "Sedan (Outstation)",
@@ -223,6 +235,18 @@ export async function POST() {
         capacity: "7+1",
         vehicle_category: "outstation"
       },
+      {
+        name: "Force Urbania (Outstation)",
+        slug: "force-urbania-outstation",
+        base_fare: 0,
+        per_km_rate: 42,
+        image_url: "/force-urbania.jpg",
+        is_ev: false,
+        is_active: true,
+        sort_order: 19,
+        capacity: "17+1",
+        vehicle_category: "outstation"
+      },
       // Local Hire Vehicles
       {
         name: "Sedan (4hrs 40km)",
@@ -232,7 +256,7 @@ export async function POST() {
         image_url: "/imgi_7_Verito.jpg",
         is_ev: false,
         is_active: true,
-        sort_order: 19,
+        sort_order: 20,
         capacity: "4+1",
         vehicle_category: "local"
       },
@@ -244,7 +268,7 @@ export async function POST() {
         image_url: "/imgi_7_Verito.jpg",
         is_ev: false,
         is_active: true,
-        sort_order: 20,
+        sort_order: 21,
         capacity: "4+1",
         vehicle_category: "local"
       },
@@ -256,7 +280,7 @@ export async function POST() {
         image_url: "/imgi_8_ertiga.jpg",
         is_ev: false,
         is_active: true,
-        sort_order: 21,
+        sort_order: 22,
         capacity: "6+1",
         vehicle_category: "local"
       },
@@ -268,7 +292,7 @@ export async function POST() {
         image_url: "/imgi_9_innova.png",
         is_ev: false,
         is_active: true,
-        sort_order: 22,
+        sort_order: 23,
         capacity: "7+1",
         vehicle_category: "local"
       },
@@ -280,7 +304,7 @@ export async function POST() {
         image_url: "/imgi_10_crysta.png",
         is_ev: false,
         is_active: true,
-        sort_order: 23,
+        sort_order: 24,
         capacity: "7+1",
         vehicle_category: "local"
       },
@@ -292,7 +316,7 @@ export async function POST() {
         image_url: "/imgi_12_tt.jpg",
         is_ev: false,
         is_active: true,
-        sort_order: 24,
+        sort_order: 25,
         capacity: "12+1",
         vehicle_category: "local"
       },
@@ -304,7 +328,7 @@ export async function POST() {
         image_url: "/imgi_11_hycross.jpg",
         is_ev: false,
         is_active: true,
-        sort_order: 25,
+        sort_order: 26,
         capacity: "7+1",
         vehicle_category: "local"
       },

@@ -40,7 +40,7 @@ const outstationPrices = [
   { vehicle: "Tempo Traveller NON AC", capacity: "12+1", rate: 20, bata: 500, img: "/imgi_12_tt.jpg" },
   { vehicle: "Tempo Traveller AC", capacity: "12+1", rate: 22, bata: 500, img: "/imgi_12_tt.jpg" },
   { vehicle: "Innova Hycross", capacity: "7+1", rate: 22, bata: 500, img: "/imgi_11_hycross.jpg" },
-  { vehicle: "Force Urbania", capacity: "17+1", rate: 42, bata: 600, img: "/imgi_12_tt.jpg" },
+  { vehicle: "Force Urbania", capacity: "17+1", rate: 42, bata: 600, img: "/force-urbania-v2.png" },
 ];
 
 /* ── Local Taxi Prices ── */
@@ -75,7 +75,7 @@ const outstationDestinations = [
 
 /* ── Why Us features ── */
 const whyUs = [
-  { icon: "verified_user", title: "Safe, Secured & Reliable", desc: "We take care of everything, making you comfortable and safe during every journey." },
+  { icon: "star", title: "Premium Cabs", desc: "Experience luxury with our well-maintained premium fleet for your comfort and safety." },
   { icon: "price_check", title: "Competitive Pricing", desc: "We offer the most competitive rates in the market with complete transparency on total cost." },
   { icon: "thumb_up", title: "Low Cancellation Rate", desc: "Count on us for your travel plans. Our ultra-low cancellation rate ensures you're never stranded." },
   { icon: "support_agent", title: "24×7 Support", desc: "We operate 24 hours a day, 7 days a week, 365 days a year — always here for you." },
@@ -359,7 +359,7 @@ export default function LandingPage() {
                         + Toll ₹{item.toll} extra
                       </p>
                       <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
                         target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
@@ -410,7 +410,7 @@ export default function LandingPage() {
                         Bata ₹{item.bata}/day · Toll &amp; parking extra
                       </p>
                       <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
                         target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
@@ -464,7 +464,7 @@ export default function LandingPage() {
                         Extra: ₹{item.extraKm}/km · ₹{item.extraHr}/hr
                       </p>
                       <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919999999999"}
+                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
                         target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                         className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           item.highlight
@@ -487,11 +487,11 @@ export default function LandingPage() {
             <div className="mt-10 sm:mt-12 text-center px-4">
               <p className="text-slate-500 text-xs sm:text-sm mb-3 sm:mb-4">📞 Call us for instant booking &amp; best rates</p>
               <a
-                href="tel:+919999999999"
+                href="tel:+919901366449"
                 className="inline-flex items-center gap-2 sm:gap-3 bg-brandDark text-white px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-transform active:scale-95"
               >
                 <span className="material-symbols-outlined text-[20px] sm:text-[22px]">call</span>
-                +91 99999 99999
+                +91 99013 66449
               </a>
             </div>
           </div>
@@ -566,7 +566,7 @@ export default function LandingPage() {
               {airportAreas.map((area) => (
                 <a
                   key={area}
-                  href="tel:+919999999999"
+                  href="tel:+919901366449"
                   className="group inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-brandBlue hover:bg-brandBlue hover:text-white text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-200"
                 >
                   <span className="material-symbols-outlined text-[16px] text-brandBlue group-hover:text-white transition-colors">flight_takeoff</span>
@@ -592,7 +592,7 @@ export default function LandingPage() {
               {outstationDestinations.map((dest) => (
                 <a
                   key={dest}
-                  href="tel:+919999999999"
+                  href="tel:+919901366449"
                   className="group inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-brandBlue hover:bg-brandBlue hover:text-white text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all duration-200"
                 >
                   <span className="material-symbols-outlined text-[16px] text-brandBlue group-hover:text-white transition-colors">map</span>
@@ -654,7 +654,7 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-4xl mb-4 block opacity-80">support_agent</span>
                   <h3 className="font-bold text-xl mb-2">24×7 Support</h3>
                   <p className="text-white/70 text-sm">Always here whenever you need us</p>
-                  <a href="tel:+919999999999" className="mt-4 block font-extrabold text-brandBlue">99999 99999</a>
+                  <a href="tel:+919901366449" className="mt-4 block font-extrabold text-brandBlue">99013 66449</a>
                 </div>
               </div>
             </div>
@@ -675,11 +675,11 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <a
-                    href="tel:+919999999999"
+                    href="tel:+919901366449"
                     className="bg-brandBlue text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-brand hover:scale-105 transition-transform inline-flex items-center gap-3"
                   >
                     <span className="material-symbols-outlined">call</span>
-                    +91 99999 99999
+                    +91 99013 66449
                   </a>
                   <Link
                     href="/book"
@@ -701,4 +701,5 @@ export default function LandingPage() {
     </>
   );
 }
+
 

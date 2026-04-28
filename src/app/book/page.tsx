@@ -63,8 +63,7 @@ export default function BookingPage() {
   const dropoffRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const baseFare = selectedVehicle?.base_fare || 0;
-  const taxes = baseFare * 0.12;
-  const totalAmount = baseFare + taxes;
+  const totalAmount = baseFare; // No taxes, just base fare
 
   React.useEffect(() => {
     console.log("Fetching vehicles from /api/vehicles");
@@ -165,7 +164,7 @@ export default function BookingPage() {
           pickup_date: `${pickupDate}T${convertTime12to24(pickupTime)}:00`,
           vehicle_type: selectedVehicle?.slug,
           base_fare: baseFare,
-          taxes: taxes,
+          taxes: 0,
           total_amount: totalAmount,
           status: "pending",
         }),
@@ -179,8 +178,8 @@ export default function BookingPage() {
         return;
       }
 
-      alert(`Booking submitted successfully! Booking ID: ${booking.id}\n\nWe will contact you shortly to confirm your ride.`);
-      router.push("/");
+      // Redirect to confirmation page with booking ID
+      router.push(`/booking-confirmation?id=${booking.id}`);
     } catch (err) {
       console.error(err);
       alert("Something went wrong. Please try again.");
@@ -609,10 +608,6 @@ export default function BookingPage() {
                     <span className="opacity-70 font-label">Base Fare</span>
                     <span className="font-bold">₹{baseFare.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs md:text-sm">
-                    <span className="opacity-70 font-label">Taxes (12%)</span>
-                    <span className="font-bold">₹{taxes.toFixed(2)}</span>
-                  </div>
                   <div className="pt-4 md:pt-6 mt-2 border-t border-white/20">
                     <div className="flex justify-between items-end">
                       <div>
@@ -620,6 +615,7 @@ export default function BookingPage() {
                         <p className="text-2xl md:text-3xl font-extrabold tracking-tighter">₹{totalAmount.toFixed(2)}</p>
                       </div>
                     </div>
+                    <p className="text-[9px] md:text-[10px] text-white/60 mt-2">*Additional charges may apply (toll, parking)</p>
                   </div>
                 </div>
               </div>

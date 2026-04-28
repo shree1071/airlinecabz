@@ -17,17 +17,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AirlinCabz | Premium Airport Taxi & Outstation Cabs in Bangalore",
+  title: "AirlinCabz - Premium Airport Taxi Bangalore | Book Now ₹799 | Low Cancellation",
   description:
-    "Book premium airport taxis, outstation cabs, and local rentals in Bangalore. Experience safe, reliable, and comfortable rides with our fleet of Innova Crysta, TT, and Sedans at competitive prices.",
+    "Book premium airport taxi in Bangalore with competitive pricing & low cancellation rate. 24/7 service from ₹799. Kempegowda airport pickup & drop. Toll & parking extra. Call +91 99013 66449",
   keywords: [
-    "cab booking bangalore", 
     "airport taxi bangalore", 
-    "outstation cabs bangalore", 
-    "innova crysta rental", 
-    "tempo traveller booking", 
-    "force urbania rent bangalore",
-    "cheap airport taxi"
+    "kempegowda airport cab", 
+    "premium taxi service bangalore",
+    "airport pickup bangalore",
+    "airport drop bangalore",
+    "cheap airport taxi",
+    "reliable cab service",
+    "24/7 taxi bangalore",
+    "low cancellation taxi",
+    "competitive pricing cab",
+    "innova crysta airport taxi",
+    "tempo traveller airport"
   ],
   openGraph: {
     title: "AirlinCabz | Premium Airport Taxi & Outstation Cabs",

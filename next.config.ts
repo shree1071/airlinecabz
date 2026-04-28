@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
         pathname: "/aida/**",
       },
     ],
+    qualities: [100, 75, 50],
   },
 };
 
