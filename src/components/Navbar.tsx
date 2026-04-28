@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -30,7 +31,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-brandBlue text-2xl">local_taxi</span>
+          <Image
+            src="/logo.png"
+            alt="AirlinCabz Logo"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
           <span className={`text-2xl font-black italic tracking-tighter font-headline transition-colors ${scrolled ? "text-brandDark" : "text-white"}`}>
             AirlinCabz
           </span>

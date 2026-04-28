@@ -76,7 +76,7 @@ function BookingConfirmationContent() {
       `*Additional charges may apply (toll, parking)`;
 
     // Redirect to WhatsApp
-    window.open(`https://wa.me/919901366449?text=${whatsappMessage}`, '_blank');
+    window.open(`https://wa.me/919880691116?text=${whatsappMessage}`, '_blank');
   };
 
   const downloadPDF = () => {
@@ -403,7 +403,7 @@ function BookingConfirmationContent() {
         {/* Contact Info */}
         <div className="mt-8 text-center">
           <p className="text-sm text-slate-600 mb-2">Need help? Contact us</p>
-          <a href="tel:+919901366449" className="text-blue-600 font-bold text-lg hover:underline">
+          <a href="tel:+919880691116" className="text-blue-600 font-bold text-lg hover:underline">
             +91 99013 66449
           </a>
         </div>
@@ -426,3 +426,4 @@ export default function BookingConfirmationPage() {
     </Suspense>
   );
 }
+

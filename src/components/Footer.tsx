@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,7 +14,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1 flex flex-col gap-5">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-brandBlue text-2xl">local_taxi</span>
+              <Image
+                src="/logo.png"
+                alt="AirlinCabz Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
               <span className="font-headline font-extrabold text-white text-2xl tracking-tighter">
                 AirlinCabz
               </span>
@@ -25,7 +32,7 @@ export default function Footer() {
             {/* Contact */}
             <div className="flex flex-col gap-2 mt-2">
               <a
-                href="tel:+919901366449"
+                href="tel:+919880691116"
                 className="inline-flex items-center gap-2 text-brandBlue font-bold hover:text-blue-300 transition-colors text-sm"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span>
@@ -56,7 +63,7 @@ export default function Footer() {
                 "HAL to Airport",
               ].map((item) => (
                 <li key={item}>
-                  <a href="tel:+919901366449" className="hover:text-white transition-colors hover:underline underline-offset-4">
+                  <a href="tel:+919880691116" className="hover:text-white transition-colors hover:underline underline-offset-4">
                     {item}
                   </a>
                 </li>
@@ -79,7 +86,7 @@ export default function Footer() {
                 "Bangalore to Chennai",
               ].map((item) => (
                 <li key={item}>
-                  <a href="tel:+919901366449" className="hover:text-white transition-colors hover:underline underline-offset-4">
+                  <a href="tel:+919880691116" className="hover:text-white transition-colors hover:underline underline-offset-4">
                     {item}
                   </a>
                 </li>
@@ -94,7 +101,7 @@ export default function Footer() {
               {[
                 { label: "About Us", href: "#futures" },
                 { label: "Blog", href: "#" },
-                { label: "Contact Us", href: "tel:+919901366449" },
+                { label: "Contact Us", href: "tel:+919880691116" },
                 { label: "Privacy Policy", href: "#" },
                 { label: "Terms & Conditions", href: "#" },
               ].map((item) => (
@@ -109,7 +116,7 @@ export default function Footer() {
             {/* Book CTA */}
             <div className="mt-8">
               <a
-                href="tel:+919901366449"
+                href="tel:+919880691116"
                 className="inline-flex items-center gap-2 bg-brandBlue text-white px-6 py-3 rounded-xl font-bold text-sm hover:brightness-110 transition-all shadow-brand"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span>
@@ -129,7 +136,7 @@ export default function Footer() {
             <div className="flex gap-6">
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
               <Link href="#" className="hover:text-white transition-colors">Blog</Link>
-              <Link href="tel:+919901366449" className="hover:text-white transition-colors">Contact us</Link>
+              <Link href="tel:+919880691116" className="hover:text-white transition-colors">Contact us</Link>
               <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="#" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
             </div>
@@ -145,5 +152,6 @@ export default function Footer() {
     </footer>
   );
 }
+
 
 

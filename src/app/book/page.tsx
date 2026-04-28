@@ -209,7 +209,13 @@ export default function BookingPage() {
           </div>
           <div className="flex items-center gap-1 md:gap-2">
             <span className="text-[9px] md:text-xs font-semibold uppercase tracking-widest text-outline">AirlinCabz</span>
-            <span className="material-symbols-outlined text-primary text-lg md:text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>directions_car</span>
+            <Image
+              src="/logo.png"
+              alt="AirlinCabz"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
           </div>
         </div>
       </header>

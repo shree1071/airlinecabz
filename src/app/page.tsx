@@ -360,7 +360,7 @@ export default function LandingPage() {
                       </p>
                       <div className="mt-4 flex flex-col gap-2">
                         <a
-                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919880691116"}
                           target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                           className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                             item.highlight
@@ -424,7 +424,7 @@ export default function LandingPage() {
                       </p>
                       <div className="mt-4 flex flex-col gap-2">
                         <a
-                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919880691116"}
                           target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                           className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                             item.highlight
@@ -491,7 +491,7 @@ export default function LandingPage() {
                       </p>
                       <div className="mt-4 flex flex-col gap-2">
                         <a
-                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919880691116"}
                           target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
                           className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                             item.highlight
@@ -526,7 +526,7 @@ export default function LandingPage() {
             <div className="mt-10 sm:mt-12 text-center px-4">
               <p className="text-slate-500 text-xs sm:text-sm mb-3 sm:mb-4">📞 Call us for instant booking &amp; best rates</p>
               <a
-                href="tel:+919901366449"
+                href="tel:+919880691116"
                 className="inline-flex items-center gap-2 sm:gap-3 bg-brandDark text-white px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-transform active:scale-95"
               >
                 <span className="material-symbols-outlined text-[20px] sm:text-[22px]">call</span>
@@ -691,7 +691,7 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-4xl mb-4 block opacity-80">support_agent</span>
                   <h3 className="font-bold text-xl mb-2">24×7 Support</h3>
                   <p className="text-white/70 text-sm">Always here whenever you need us</p>
-                  <a href="tel:+919901366449" className="mt-4 block font-extrabold text-brandBlue">99013 66449</a>
+                  <a href="tel:+919880691116" className="mt-4 block font-extrabold text-brandBlue">99013 66449</a>
                 </div>
               </div>
             </div>
@@ -712,7 +712,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <a
-                    href="tel:+919901366449"
+                    href="tel:+919880691116"
                     className="bg-brandBlue text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-brand hover:scale-105 transition-transform inline-flex items-center gap-3"
                   >
                     <span className="material-symbols-outlined">call</span>
@@ -738,5 +738,6 @@ export default function LandingPage() {
     </>
   );
 }
+
 
 
