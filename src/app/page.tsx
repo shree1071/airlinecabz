@@ -358,20 +358,33 @@ export default function LandingPage() {
                       <p className={`text-xs mt-1 ${item.highlight ? "text-white/70" : "text-slate-400"}`}>
                         + Toll ₹{item.toll} extra
                       </p>
-                      <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
-                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
-                        className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          item.highlight
-                            ? "bg-white text-brandBlue hover:bg-blue-50"
-                            : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
-                        </span>
-                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
-                      </a>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <a
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white text-brandBlue hover:bg-blue-50"
+                              : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                          </span>
+                          {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
+                        </a>
+                        <Link
+                          href="/book"
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white/80 text-brandBlue hover:bg-white"
+                              : "bg-brandBlue text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                          Book Online
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -409,20 +422,33 @@ export default function LandingPage() {
                       <p className={`text-xs mt-1 ${item.highlight ? "text-white/70" : "text-slate-400"}`}>
                         Bata ₹{item.bata}/day · Toll &amp; parking extra
                       </p>
-                      <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
-                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
-                        className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          item.highlight
-                            ? "bg-white text-brandBlue hover:bg-blue-50"
-                            : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
-                        </span>
-                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
-                      </a>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <a
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white text-brandBlue hover:bg-blue-50"
+                              : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                          </span>
+                          {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
+                        </a>
+                        <Link
+                          href="/book"
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white/80 text-brandBlue hover:bg-white"
+                              : "bg-brandBlue text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                          Book Online
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -463,20 +489,33 @@ export default function LandingPage() {
                       <p className={`text-[11px] mt-1 ${item.highlight ? "text-white/60" : "text-slate-400"}`}>
                         Extra: ₹{item.extraKm}/km · ₹{item.extraHr}/hr
                       </p>
-                      <a
-                        href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
-                        target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
-                        className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                          item.highlight
-                            ? "bg-white text-brandBlue hover:bg-blue-50"
-                            : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {isPremiumCab(item.vehicle) ? "chat" : "call"}
-                        </span>
-                        {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
-                      </a>
+                      <div className="mt-4 flex flex-col gap-2">
+                        <a
+                          href={isPremiumCab(item.vehicle) ? getWhatsAppLink(item.vehicle) : "tel:+919901366449"}
+                          target={isPremiumCab(item.vehicle) ? "_blank" : undefined}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white text-brandBlue hover:bg-blue-50"
+                              : "bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {isPremiumCab(item.vehicle) ? "chat" : "call"}
+                          </span>
+                          {isPremiumCab(item.vehicle) ? "WhatsApp Booking" : "Book Now"}
+                        </a>
+                        <Link
+                          href="/book"
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                            item.highlight
+                              ? "bg-white/80 text-brandBlue hover:bg-white"
+                              : "bg-brandBlue text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                          Book Online
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -564,18 +603,12 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-3 justify-center">
               {airportAreas.map((area) => (
-                <div key={area} className="flex flex-col gap-2">
-                  <div className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm">
-                    <span className="material-symbols-outlined text-[16px] text-brandBlue">flight_takeoff</span>
-                    {area} to Airport
-                  </div>
-                  <Link
-                    href="/book"
-                    className="inline-flex items-center justify-center gap-1.5 bg-brandBlue text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">calendar_month</span>
-                    Book Online
-                  </Link>
+                <div
+                  key={area}
+                  className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-brandBlue">flight_takeoff</span>
+                  {area} to Airport
                 </div>
               ))}
             </div>
@@ -595,18 +628,12 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-3 justify-center">
               {outstationDestinations.map((dest) => (
-                <div key={dest} className="flex flex-col gap-2">
-                  <div className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm">
-                    <span className="material-symbols-outlined text-[16px] text-brandBlue">map</span>
-                    Bangalore to {dest}
-                  </div>
-                  <Link
-                    href="/book"
-                    className="inline-flex items-center justify-center gap-1.5 bg-brandBlue text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">calendar_month</span>
-                    Book Online
-                  </Link>
+                <div
+                  key={dest}
+                  className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm"
+                >
+                  <span className="material-symbols-oriented text-[16px] text-brandBlue">map</span>
+                  Bangalore to {dest}
                 </div>
               ))}
             </div>
