@@ -35,18 +35,31 @@ export const metadata: Metadata = {
     "innova crysta airport taxi",
     "tempo traveller airport"
   ],
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "AirlinCabz | Premium Airport Taxi & Outstation Cabs",
     description: "Book premium airport taxis, outstation cabs, and local rentals in Bangalore. Safe, reliable, and comfortable rides.",
     type: "website",
     locale: "en_IN",
-    siteName: "AirlinCabz"
+    siteName: "AirlinCabz",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "AirlinCabz - Premium Airport Taxi Bangalore",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "AirlinCabz | Premium Airport Taxi",
     description: "Book premium airport taxis, outstation cabs, and local rentals in Bangalore.",
-  }
+    images: ["/logo.png"],
+  },
 };
 
 export default function RootLayout({
