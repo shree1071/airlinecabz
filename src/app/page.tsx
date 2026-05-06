@@ -185,7 +185,7 @@ export default function LandingPage() {
               Flying to?
             </h1>
             <p className="mt-3 sm:mt-4 text-white/80 text-xs sm:text-base max-w-md leading-relaxed drop-shadow">
-              Premium airport transfers across Bangalore. Safe, professional, and on time — starting at just ₹799.
+              Bangalore's #1 Airport Taxi — Pick Up From Anywhere
             </p>
             <a
               href="#booking-panel"

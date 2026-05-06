@@ -75,6 +75,18 @@ export default function BookingPage() {
   const [pickupTime, setPickupTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
+  
+  // Form validation errors
+  const [errors, setErrors] = useState<{
+    customerName?: string;
+    customerEmail?: string;
+    pickupLocation?: string;
+    dropoffLocation?: string;
+    addressLine1?: string;
+    pickupDate?: string;
+    pickupTime?: string;
+    vehicle?: string;
+  }>({});
 
   // Get user's current location
   const handleUseCurrentLocation = () => {
@@ -315,20 +327,67 @@ export default function BookingPage() {
       return;
     }
 
-    if (!customerName || !customerEmail || !pickupDate || !pickupTime) {
-      alert("Please fill in all required fields");
-      return;
+    // Reset errors
+    const newErrors: typeof errors = {};
+
+    // Validate all fields
+    if (!customerName.trim()) {
+      newErrors.customerName = "Please enter your name";
     }
 
-    if (!isValidTime(pickupTime)) {
-      alert("Please select a valid pickup time (at least 1 hour from now for today's bookings)");
-      return;
+    if (!customerEmail.trim()) {
+      newErrors.customerEmail = "Please enter your email";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      newErrors.customerEmail = "Please enter a valid email address";
+    }
+
+    if (!pickupDate) {
+      newErrors.pickupDate = "Please select a pickup date";
+    }
+
+    if (!pickupTime) {
+      newErrors.pickupTime = "Please select a pickup time";
+    } else if (!isValidTime(pickupTime)) {
+      newErrors.pickupTime = "Please select a time at least 1 hour from now";
+    }
+
+    // Validate location based on trip type
+    if (tripType === "to_airport") {
+      if (!pickupText.trim() && !pickupLat) {
+        newErrors.pickupLocation = "Please enter or select your pickup location";
+      }
+      if (!addressLine1.trim()) {
+        newErrors.addressLine1 = "Please enter your complete address";
+      }
+    } else {
+      if (!dropoffText.trim()) {
+        newErrors.dropoffLocation = "Please enter your dropoff location";
+      }
+      if (!addressLine1.trim()) {
+        newErrors.addressLine1 = "Please enter your complete address";
+      }
     }
 
     if (!selectedVehicle) {
-      alert("Please select a vehicle");
+      newErrors.vehicle = "Please select a vehicle";
+    }
+
+    // If there are errors, set them and scroll to first error
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      
+      // Scroll to first error
+      const firstErrorField = Object.keys(newErrors)[0];
+      const errorElement = document.querySelector(`[data-field="${firstErrorField}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
       return;
     }
+
+    // Clear errors if validation passes
+    setErrors({});
 
     // Build complete address
     const detailedAddress = [
@@ -347,11 +406,6 @@ export default function BookingPage() {
       ? (detailedAddress || dropoffText)
       : "Kempegowda International Airport, Bangalore";
 
-    if (!finalPickupLocation || !finalDropoffLocation) {
-      alert("Please provide complete address details");
-      return;
-    }
-
     setSubmitting(true);
 
     try {
@@ -369,7 +423,7 @@ export default function BookingPage() {
           landmark: landmark,
           area: area,
           pincode: pincode,
-          pickup_date: `${pickupDate}T${pickupTime.format('HH:mm')}:00`,
+          pickup_date: `${pickupDate}T${pickupTime!.format('HH:mm')}:00`,
           vehicle_type: selectedVehicle?.slug,
           base_fare: baseFare,
           taxes: 0,
@@ -430,7 +484,7 @@ export default function BookingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-8">
-            <section className="bg-surface-container-lowest rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-sm border border-outline-variant/10">
+            <section className="bg-surface-container-lowest rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-sm border border-outline-variant/10" data-field="customerName">
               <h2 className="font-headline text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center gap-3">
                 <span className="w-1.5 h-6 md:h-8 bg-primary rounded-full"></span>
                 Your Details
@@ -441,22 +495,44 @@ export default function BookingPage() {
                   <input
                     type="text"
                     placeholder="Your Name"
-                    className="input-field"
+                    className={`input-field ${errors.customerName ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      if (errors.customerName) {
+                        setErrors(prev => ({ ...prev, customerName: undefined }));
+                      }
+                    }}
                     required
                   />
+                  {errors.customerName && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {errors.customerName}
+                    </p>
+                  )}
                 </div>
                 <div className="group relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">email</span>
                   <input
                     type="email"
                     placeholder="Your Email"
-                    className="input-field"
+                    className={`input-field ${errors.customerEmail ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
                     value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerEmail(e.target.value);
+                      if (errors.customerEmail) {
+                        setErrors(prev => ({ ...prev, customerEmail: undefined }));
+                      }
+                    }}
                     required
                   />
+                  {errors.customerEmail && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {errors.customerEmail}
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -555,15 +631,26 @@ export default function BookingPage() {
                           </div>
                         )}
                         
-                        <div className="group relative">
+                        <div className="group relative" data-field="pickupLocation">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">location_on</span>
                           <input
                             type="text"
                             placeholder="Or type your location manually"
-                            className="input-field"
+                            className={`input-field ${errors.pickupLocation ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
                             value={pickupText}
-                            onChange={(e) => setPickupText(e.target.value)}
+                            onChange={(e) => {
+                              setPickupText(e.target.value);
+                              if (errors.pickupLocation) {
+                                setErrors(prev => ({ ...prev, pickupLocation: undefined }));
+                              }
+                            }}
                           />
+                          {errors.pickupLocation && (
+                            <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">error</span>
+                              {errors.pickupLocation}
+                            </p>
+                          )}
                         </div>
                         
                         {/* Show coordinates if available */}
@@ -672,34 +759,60 @@ export default function BookingPage() {
                           </div>
                         </div>
 
-                      <div>
+                      <div data-field="dropoffLocation">
                         <label className="text-xs font-bold text-slate-700 mb-2 block">Dropoff Location</label>
                         <div className="group relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">flag</span>
                           <input
                             type="text"
                             placeholder="Enter your destination (e.g., MG Road, Bangalore)"
-                            className="input-field"
+                            className={`input-field ${errors.dropoffLocation ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
                             value={dropoffText}
-                            onChange={(e) => setDropoffText(e.target.value)}
+                            onChange={(e) => {
+                              setDropoffText(e.target.value);
+                              if (errors.dropoffLocation) {
+                                setErrors(prev => ({ ...prev, dropoffLocation: undefined }));
+                              }
+                            }}
                           />
                         </div>
+                        {errors.dropoffLocation && (
+                          <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">error</span>
+                            {errors.dropoffLocation}
+                          </p>
+                        )}
                       </div>
 
                         {/* Detailed Address Section */}
-                        <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                        <div className="bg-slate-50 rounded-xl p-4 space-y-3" data-field="addressLine1">
                           <p className="text-xs font-bold text-slate-700 mb-2">Complete Address Details</p>
                           
                           <div className="group relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-slate-400">home</span>
                             <input
                               type="text"
-                              placeholder="House/Flat No., Building Name"
-                              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-primary focus:outline-none text-sm"
+                              placeholder="House/Flat No., Building Name *"
+                              className={`w-full pl-10 pr-4 py-2.5 rounded-lg border focus:outline-none text-sm ${
+                                errors.addressLine1 
+                                  ? 'border-2 border-red-500 focus:border-red-500' 
+                                  : 'border-slate-200 focus:border-primary'
+                              }`}
                               value={addressLine1}
-                              onChange={(e) => setAddressLine1(e.target.value)}
+                              onChange={(e) => {
+                                setAddressLine1(e.target.value);
+                                if (errors.addressLine1) {
+                                  setErrors(prev => ({ ...prev, addressLine1: undefined }));
+                                }
+                              }}
                             />
                           </div>
+                          {errors.addressLine1 && (
+                            <p className="text-xs text-red-600 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-sm">error</span>
+                              {errors.addressLine1}
+                            </p>
+                          )}
 
                           <div className="group relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-slate-400">signpost</span>
@@ -752,41 +865,61 @@ export default function BookingPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-field="pickupDate">
                     <label className="text-[10px] md:text-xs font-bold font-label text-outline uppercase px-1">Pickup Date</label>
                     <div className="relative">
                       <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm">calendar_month</span>
                       <input 
-                        className="input-field py-2.5 md:py-3 pl-10 md:pl-11 text-sm" 
+                        className={`input-field py-2.5 md:py-3 pl-10 md:pl-11 text-sm ${
+                          errors.pickupDate ? 'border-2 border-red-500 focus:border-red-500' : ''
+                        }`}
                         type="date"
                         value={pickupDate}
-                        onChange={(e) => setPickupDate(e.target.value)}
+                        onChange={(e) => {
+                          setPickupDate(e.target.value);
+                          if (errors.pickupDate) {
+                            setErrors(prev => ({ ...prev, pickupDate: undefined }));
+                          }
+                        }}
                       />
                     </div>
+                    {errors.pickupDate && (
+                      <p className="text-xs text-red-600 flex items-center gap-1 px-1">
+                        <span className="material-symbols-outlined text-sm">error</span>
+                        {errors.pickupDate}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2" data-field="pickupTime">
                     <label className="text-[10px] md:text-xs font-bold font-label text-outline uppercase px-1">Pickup Time</label>
                     <div className="mui-time-picker-wrapper relative">
                       <MobileTimePicker
                         value={pickupTime}
-                        onChange={(newValue) => setPickupTime(newValue)}
+                        onChange={(newValue) => {
+                          setPickupTime(newValue);
+                          if (errors.pickupTime) {
+                            setErrors(prev => ({ ...prev, pickupTime: undefined }));
+                          }
+                        }}
                         disabled={!pickupDate}
                         minTime={getMinTime()}
                         slotProps={{
                           textField: {
                             fullWidth: true,
+                            error: !!errors.pickupTime,
                             sx: {
                               '& .MuiOutlinedInput-root': {
                                 fontSize: '0.875rem',
                                 borderRadius: '12px',
                                 '& fieldset': {
-                                  borderColor: 'rgb(226 232 240)',
+                                  borderColor: errors.pickupTime ? 'rgb(239 68 68)' : 'rgb(226 232 240)',
+                                  borderWidth: errors.pickupTime ? '2px' : '1px',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: '#2563eb',
+                                  borderColor: errors.pickupTime ? 'rgb(239 68 68)' : '#2563eb',
                                 },
                                 '&.Mui-focused fieldset': {
-                                  borderColor: '#2563eb',
+                                  borderColor: errors.pickupTime ? 'rgb(239 68 68)' : '#2563eb',
                                   borderWidth: '2px',
                                 },
                               },
@@ -795,23 +928,37 @@ export default function BookingPage() {
                         }}
                       />
                     </div>
-                    {!pickupDate && (
+                    {!pickupDate && !errors.pickupTime && (
                       <p className="text-[10px] text-slate-500 px-1">Please select a pickup date first</p>
                     )}
-                    {pickupDate && pickupTime && !isValidTime(pickupTime) && (
-                      <p className="text-[10px] text-red-500 px-1">⚠️ Please select a time at least 1 hour from now</p>
+                    {errors.pickupTime && (
+                      <p className="text-xs text-red-600 flex items-center gap-1 px-1">
+                        <span className="material-symbols-outlined text-sm">error</span>
+                        {errors.pickupTime}
+                      </p>
                     )}
                   </div>
                 </div>
               </div>
             </section>
 
-            <section className="bg-surface-container-lowest rounded-3xl p-6 md:p-8 shadow-sm border border-outline-variant/10">
+            <section className={`bg-surface-container-lowest rounded-3xl p-6 md:p-8 shadow-sm border ${
+              errors.vehicle ? 'border-2 border-red-500' : 'border-outline-variant/10'
+            }`} data-field="vehicle">
               <h2 className="font-headline text-xl md:text-2xl font-bold flex items-center gap-3 mb-2">
                 <span className="w-1.5 h-6 md:h-8 bg-primary rounded-full"></span>
                 Select Fleet Class
               </h2>
               <p className="text-xs md:text-sm text-slate-500 mb-4 md:mb-6 ml-5">Choose your preferred vehicle for the journey</p>
+              
+              {errors.vehicle && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {errors.vehicle}
+                  </p>
+                </div>
+              )}
               
               {vehicles.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
@@ -823,7 +970,12 @@ export default function BookingPage() {
                   {vehicles.map((v) => (
                     <button
                       key={v.id}
-                      onClick={() => setSelectedVehicle(v)}
+                      onClick={() => {
+                        setSelectedVehicle(v);
+                        if (errors.vehicle) {
+                          setErrors(prev => ({ ...prev, vehicle: undefined }));
+                        }
+                      }}
                       className={`flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all group ${
                         selectedVehicle?.id === v.id
                           ? "bg-primary-container/10 border-primary shadow-md"
