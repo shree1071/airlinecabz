@@ -143,7 +143,7 @@ export async function POST() {
         slug: "force-urbania",
         base_fare: 4999,
         per_km_rate: 0,
-        image_url: "/force-urbania.jpg",
+        image_url: "/force-urbania-v2.png",
         is_ev: false,
         is_active: true,
         sort_order: 12,
@@ -240,7 +240,7 @@ export async function POST() {
         slug: "force-urbania-outstation",
         base_fare: 0,
         per_km_rate: 42,
-        image_url: "/force-urbania.jpg",
+        image_url: "/force-urbania-v2.png",
         is_ev: false,
         is_active: true,
         sort_order: 19,
@@ -330,6 +330,18 @@ export async function POST() {
         is_active: true,
         sort_order: 26,
         capacity: "7+1",
+        vehicle_category: "local"
+      },
+      {
+        name: "Force Urbania (Local)",
+        slug: "force-urbania-local",
+        base_fare: 7999,
+        per_km_rate: 0,
+        image_url: "/force-urbania-v2.png",
+        is_ev: false,
+        is_active: true,
+        sort_order: 27,
+        capacity: "17+1",
         vehicle_category: "local"
       },
     ];
