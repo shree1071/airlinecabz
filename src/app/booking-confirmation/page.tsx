@@ -110,7 +110,7 @@ function BookingConfirmationContent() {
     
     // Contact Info
     doc.setFontSize(9);
-    doc.text('+91 99013 66449  |  support@airlincabz.com', pageWidth / 2, 42, { align: 'center' });
+    doc.text('+91 98806 91116  |  support@airlincabz.com', pageWidth / 2, 42, { align: 'center' });
     
     // Document Title
     doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
@@ -256,7 +256,7 @@ function BookingConfirmationContent() {
       '• Please arrive 5 minutes before scheduled pickup time',
       '• Cancellation charges may apply as per policy',
       '• Driver details will be shared 30 minutes before pickup',
-      '• For any queries, contact us at +91 99013 66449'
+      '• For any queries, contact us at +91 98806 91116'
     ];
     
     terms.forEach((term, index) => {
@@ -404,7 +404,7 @@ function BookingConfirmationContent() {
         <div className="mt-8 text-center">
           <p className="text-sm text-slate-600 mb-2">Need help? Contact us</p>
           <a href="tel:+919880691116" className="text-blue-600 font-bold text-lg hover:underline">
-            +91 99013 66449
+            +91 98806 91116
           </a>
         </div>
       </div>

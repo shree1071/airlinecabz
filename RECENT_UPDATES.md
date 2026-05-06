@@ -4,7 +4,7 @@
 
 ### 1. Phone Number Update
 - **Old**: +91 99999 99999
-- **New**: +91 99013 66449
+- **New**: +91 98806 91116
 - Updated across all pages: Landing, Footer, Navbar, Booking
 
 ### 2. Landing Page Features Updated
@@ -65,7 +65,7 @@ Amount: ₹[Amount]
 ```html
 Title: "AirlinCabz - Premium Airport Taxi Bangalore | Book Now ₹799 | Low Cancellation"
 
-Description: "Book premium airport taxi in Bangalore with competitive pricing & low cancellation rate. 24/7 service from ₹799. Kempegowda airport pickup & drop. Toll & parking extra. Call +91 99013 66449"
+Description: "Book premium airport taxi in Bangalore with competitive pricing & low cancellation rate. 24/7 service from ₹799. Kempegowda airport pickup & drop. Toll & parking extra. Call +91 98806 91116"
 
 Keywords:
 - airport taxi bangalore
@@ -116,7 +116,7 @@ Total Amount: ₹1999
 ### 7. WhatsApp Integration
 
 **Purpose:** Direct customer communication
-**Phone:** +91 99013 66449
+**Phone:** +91 98806 91116
 **Trigger:** After booking confirmation
 **Content:** Complete booking details pre-filled
 **Benefit:** Instant confirmation and support

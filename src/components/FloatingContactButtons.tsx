@@ -5,8 +5,8 @@ import { useState } from 'react';
 export default function FloatingContactButtons() {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const phoneNumber = "+919901366449";
-  const whatsappNumber = "919901366449";
+  const phoneNumber = "+919880691116";
+  const whatsappNumber = "919880691116";
   const whatsappMessage = "Hello! I want to book a cab with AirlinCabz.";
 
   return (

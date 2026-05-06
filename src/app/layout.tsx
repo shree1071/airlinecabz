@@ -20,7 +20,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AirlinCabz - Premium Airport Taxi Bangalore | Book Now ₹799 | Low Cancellation",
   description:
-    "Book premium airport taxi in Bangalore with competitive pricing & low cancellation rate. 24/7 service from ₹799. Kempegowda airport pickup & drop. Toll & parking extra. Call +91 99013 66449",
+    "Book premium airport taxi in Bangalore with competitive pricing & low cancellation rate. 24/7 service from ₹799. Kempegowda airport pickup & drop. Toll & parking extra. Call +91 98806 91116",
   keywords: [
     "airport taxi bangalore", 
     "kempegowda airport cab", 

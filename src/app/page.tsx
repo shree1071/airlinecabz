@@ -91,7 +91,7 @@ function isPremiumCab(vehicle: string) {
 function getWhatsAppLink(vehicle: string, price?: number) {
   const priceText = price ? ` - ₹${price}` : '';
   const message = `Hello! I want to book a cab:\n\nVehicle: ${vehicle}${priceText}\n\nPlease confirm availability and provide booking details.`;
-  return `https://wa.me/919901366449?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/919880691116?text=${encodeURIComponent(message)}`;
 }
 
 /* ── Shared Vehicle Card Image Block ── */
@@ -381,7 +381,7 @@ export default function LandingPage() {
                 className="inline-flex items-center gap-2 sm:gap-3 bg-brandDark text-white px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-transform active:scale-95"
               >
                 <span className="material-symbols-outlined text-[20px] sm:text-[22px]">call</span>
-                +91 99013 66449
+                +91 98806 91116
               </a>
             </div>
           </div>
@@ -542,7 +542,7 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-4xl mb-4 block opacity-80">support_agent</span>
                   <h3 className="font-bold text-xl mb-2">24×7 Support</h3>
                   <p className="text-white/70 text-sm">Always here whenever you need us</p>
-                  <a href="tel:+919880691116" className="mt-4 block font-extrabold text-brandBlue">99013 66449</a>
+                  <a href="tel:+919880691116" className="mt-4 block font-extrabold text-brandBlue">98806 91116</a>
                 </div>
               </div>
             </div>
@@ -567,7 +567,7 @@ export default function LandingPage() {
                     className="bg-brandBlue text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-brand hover:scale-105 transition-transform inline-flex items-center gap-3"
                   >
                     <span className="material-symbols-outlined">call</span>
-                    +91 99013 66449
+                    +91 98806 91116
                   </a>
                   <Link
                     href="/book"

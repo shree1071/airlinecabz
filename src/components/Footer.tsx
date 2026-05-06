@@ -36,7 +36,7 @@ export default function Footer() {
                 className="inline-flex items-center gap-2 text-brandBlue font-bold hover:text-blue-300 transition-colors text-sm"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span>
-                +91 99013 66449
+                +91 98806 91116
               </a>
               <a
                 href="mailto:help@airlincabz.com"
