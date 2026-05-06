@@ -90,7 +90,7 @@ export default function RootLayout({
               "@type": "LocalBusiness",
               "name": "AirlinCabz",
               "description": "Premium airport taxi and outstation cab service in Bangalore",
-              "url": "https://airlinecabz.com",
+              "url": "https://www.airlinecabz.com",
               "telephone": "+919880691116",
               "priceRange": "₹₹",
               "address": {

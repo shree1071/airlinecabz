@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/'],
       },
     ],
-    sitemap: 'https://airlinecabz.com/sitemap.xml',
+    sitemap: 'https://www.airlinecabz.com/sitemap.xml',
   }
 }
