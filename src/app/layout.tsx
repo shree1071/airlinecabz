@@ -82,6 +82,53 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              "name": "AirlinCabz",
+              "description": "Premium airport taxi and outstation cab service in Bangalore",
+              "url": "https://airlinecabz.com",
+              "telephone": "+919880691116",
+              "priceRange": "₹₹",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Bangalore",
+                "addressRegion": "Karnataka",
+                "addressCountry": "IN"
+              },
+              "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": "12.9716",
+                "longitude": "77.5946"
+              },
+              "openingHoursSpecification": {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                  "Sunday"
+                ],
+                "opens": "00:00",
+                "closes": "23:59"
+              },
+              "sameAs": [
+                "https://airlinecabz.com"
+              ],
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "50000"
+              }
+            })
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col antialiased">
         {children}
