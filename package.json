@@ -9,7 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@insforge/sdk": "^1.2.4",
+    "@mui/material": "^9.0.0",
+    "@mui/x-date-pickers": "^9.0.4",
+    "dayjs": "^1.11.20",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "next": "16.2.3",

@@ -4,9 +4,36 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
+import dayjs, { Dayjs } from 'dayjs';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 // Dynamically import LocationMap to avoid SSR issues
 const LocationMap = dynamic(() => import('@/components/LocationMap'), { ssr: false });
+
+// Create a custom theme for MUI components to match your design
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2563eb', // brandBlue
+    },
+  },
+  components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: '12px',
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#2563eb',
+          },
+        },
+      },
+    },
+  },
+});
 
 type Vehicle = {
   id: string;
@@ -45,8 +72,57 @@ export default function BookingPage() {
   const [pincode, setPincode] = useState("");
   
   const [pickupDate, setPickupDate] = useState("");
-  const [pickupTime, setPickupTime] = useState("09:00 AM");
+  const [pickupTime, setPickupTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Get minimum time for today
+  const getMinTime = () => {
+    if (!pickupDate) return undefined;
+    
+    const selectedDate = new Date(pickupDate);
+    const now = new Date();
+    const isToday = selectedDate.getFullYear() === now.getFullYear() &&
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getDate() === now.getDate();
+    
+    if (isToday) {
+      // Add 1 hour buffer
+      const minTime = new Date(now.getTime() + 60 * 60 * 1000);
+      return dayjs().hour(minTime.getHours()).minute(minTime.getMinutes());
+    }
+    
+    return undefined;
+  };
+
+  // Validate if selected time is valid
+  const isValidTime = (time: Dayjs | null) => {
+    if (!pickupDate || !time) return true;
+    
+    const selectedDate = new Date(pickupDate);
+    const now = new Date();
+    const isToday = selectedDate.getFullYear() === now.getFullYear() &&
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getDate() === now.getDate();
+    
+    if (!isToday) return true;
+    
+    const minTime = getMinTime();
+    if (!minTime) return true;
+    
+    return time.isAfter(minTime) || time.isSame(minTime);
+  };
+
+  // Set default time when date is selected
+  React.useEffect(() => {
+    if (pickupDate && !pickupTime) {
+      const minTime = getMinTime();
+      if (minTime) {
+        setPickupTime(minTime);
+      } else {
+        setPickupTime(dayjs().hour(9).minute(0));
+      }
+    }
+  }, [pickupDate]);
 
   // Get vehicle from URL parameter
   React.useEffect(() => {
@@ -197,8 +273,13 @@ export default function BookingPage() {
       return;
     }
 
-    if (!customerName || !customerEmail || !pickupDate) {
+    if (!customerName || !customerEmail || !pickupDate || !pickupTime) {
       alert("Please fill in all required fields");
+      return;
+    }
+
+    if (!isValidTime(pickupTime)) {
+      alert("Please select a valid pickup time (at least 1 hour from now for today's bookings)");
       return;
     }
 
@@ -246,7 +327,7 @@ export default function BookingPage() {
           landmark: landmark,
           area: area,
           pincode: pincode,
-          pickup_date: `${pickupDate}T${convertTime12to24(pickupTime)}:00`,
+          pickup_date: `${pickupDate}T${pickupTime.format('HH:mm')}:00`,
           vehicle_type: selectedVehicle?.slug,
           base_fare: baseFare,
           taxes: 0,
@@ -273,18 +354,16 @@ export default function BookingPage() {
   };
 
   const convertTime12to24 = (time12h: string) => {
-    const [time, modifier] = time12h.split(' ');
-    let [hours, minutes] = time.split(':');
-    if (hours === '12') hours = '00';
-    if (modifier === 'PM') hours = String(parseInt(hours, 10) + 12);
-    return `${hours}:${minutes}`;
+    // No longer needed as we're using 24-hour format directly
+    return time12h;
   };
 
   if (loading) return <div className="p-24 text-center">Loading...</div>;
 
   return (
-    <>
-      <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-outline-variant/10">
+    <ThemeProvider theme={theme}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-outline-variant/10">
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-4">
             <button onClick={() => router.back()} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
@@ -627,20 +706,47 @@ export default function BookingPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] md:text-xs font-bold font-label text-outline uppercase px-1">Pickup Time</label>
-                    <div className="relative">
-                      <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-sm">schedule</span>
-                      <select 
-                        className="input-field py-2.5 md:py-3 pl-10 md:pl-11 appearance-none text-sm"
+                    <div className="mui-time-picker-wrapper relative">
+                      <TimePicker
                         value={pickupTime}
-                        onChange={(e) => setPickupTime(e.target.value)}
-                      >
-                        <option>09:00 AM</option>
-                        <option>11:30 AM</option>
-                        <option>02:00 PM</option>
-                        <option>05:30 PM</option>
-                        <option>08:00 PM</option>
-                      </select>
+                        onChange={(newValue) => setPickupTime(newValue)}
+                        disabled={!pickupDate}
+                        minTime={getMinTime()}
+                        orientation="landscape"
+                        viewRenderers={{
+                          hours: renderTimeViewClock,
+                          minutes: renderTimeViewClock,
+                          seconds: renderTimeViewClock,
+                        }}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            sx: {
+                              '& .MuiOutlinedInput-root': {
+                                fontSize: '0.875rem',
+                                borderRadius: '12px',
+                                '& fieldset': {
+                                  borderColor: 'rgb(226 232 240)',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#2563eb',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#2563eb',
+                                  borderWidth: '2px',
+                                },
+                              },
+                            },
+                          },
+                        }}
+                      />
                     </div>
+                    {!pickupDate && (
+                      <p className="text-[10px] text-slate-500 px-1">Please select a pickup date first</p>
+                    )}
+                    {pickupDate && pickupTime && !isValidTime(pickupTime) && (
+                      <p className="text-[10px] text-red-500 px-1">⚠️ Please select a time at least 1 hour from now</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -763,6 +869,7 @@ export default function BookingPage() {
           </div>
         </div>
       </main>
-    </>
+      </LocalizationProvider>
+    </ThemeProvider>
   );
 }

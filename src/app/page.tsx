@@ -120,45 +120,44 @@ export default function LandingPage() {
       <Navbar />
 
       {/* ═══ FULL-BLEED HERO ═══ */}
-      <section className="relative w-full h-[92vh] min-h-[600px] max-h-[900px] overflow-hidden">
+      <section className="relative w-full h-[92vh] min-h-[500px] sm:min-h-[600px] max-h-[900px] overflow-hidden">
         {/* Airport terminal background */}
         <Image
           src="/airport-terminal-hero.png"
           alt="Bangalore Airport Terminal"
           fill
-          className="object-cover object-center scale-105"
+          className="object-cover object-[center_40%] sm:object-center"
           priority
-          quality={100}
-          unoptimized
-          sizes="100vw"
+          quality={90}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
         />
         {/* Gradient overlays for cinematic effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/20 to-black/70 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/75 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10" />
 
         {/* Hero content */}
-        <div className="relative z-20 h-full flex flex-col justify-between pb-8">
+        <div className="relative z-20 h-full flex flex-col justify-between pb-6 sm:pb-8">
           {/* Top spacer for navbar */}
-          <div className="h-24" />
+          <div className="h-16 sm:h-24" />
 
           {/* Main headline */}
-          <div className="px-6 sm:px-10 lg:px-20 max-w-5xl">
-            <p className="text-white/70 text-sm sm:text-base font-semibold tracking-[0.2em] uppercase mb-3 drop-shadow">
+          <div className="px-4 sm:px-10 lg:px-20 max-w-5xl">
+            <p className="text-white/70 text-xs sm:text-base font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-2 sm:mb-3 drop-shadow">
               Bangalore Airport Taxi
             </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-2xl">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.08] tracking-tight drop-shadow-2xl">
               Hey Buddy!<br />
               <span className="text-amber-300">where are you</span><br />
               Flying to?
             </h1>
-            <p className="mt-4 text-white/75 text-sm sm:text-base max-w-md leading-relaxed drop-shadow">
+            <p className="mt-3 sm:mt-4 text-white/80 text-xs sm:text-base max-w-md leading-relaxed drop-shadow">
               Premium airport transfers across Bangalore. Safe, professional, and on time — starting at just ₹799.
             </p>
             <a
               href="#booking-panel"
-              className="mt-6 inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-sm px-6 py-3 rounded-full transition-all duration-300 hover:scale-105"
+              className="mt-4 sm:mt-6 inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all duration-300 hover:scale-105"
             >
-              <span className="material-symbols-outlined text-[18px]">explore</span>
+              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">explore</span>
               Explore Now
             </a>
           </div>
