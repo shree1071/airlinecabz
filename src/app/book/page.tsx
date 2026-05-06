@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LoadScript, Autocomplete } from "@react-google-maps/api";
+import dynamic from 'next/dynamic';
+
+// Dynamically import LocationMap to avoid SSR issues
+const LocationMap = dynamic(() => import('@/components/LocationMap'), { ssr: false });
 
 type Vehicle = {
   id: string;
@@ -14,8 +17,6 @@ type Vehicle = {
   image_url: string;
   is_ev: boolean;
 };
-
-const libraries: ("places")[] = ["places"];
 
 export default function BookingPage() {
   const router = useRouter();
@@ -31,6 +32,11 @@ export default function BookingPage() {
   const [pickupText, setPickupText] = useState("");
   const [dropoffText, setDropoffText] = useState("Kempegowda International Airport, Bangalore");
   
+  // Location coordinates
+  const [pickupLat, setPickupLat] = useState<number | null>(null);
+  const [pickupLng, setPickupLng] = useState<number | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  
   // Detailed address fields
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
@@ -41,6 +47,81 @@ export default function BookingPage() {
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("09:00 AM");
   const [submitting, setSubmitting] = useState(false);
+
+  // Get vehicle from URL parameter
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const vehicleParam = params.get('vehicle');
+    
+    if (vehicleParam && vehicles.length > 0) {
+      // Try to find matching vehicle by name
+      const matchingVehicle = vehicles.find(v => 
+        v.name.toLowerCase().includes(vehicleParam.toLowerCase()) ||
+        vehicleParam.toLowerCase().includes(v.name.toLowerCase())
+      );
+      
+      if (matchingVehicle) {
+        setSelectedVehicle(matchingVehicle);
+        console.log('Auto-selected vehicle:', matchingVehicle.name);
+      }
+    }
+  }, [vehicles]);
+
+  // Parse address components from geocoded address
+  const parseAddressComponents = (addressData: any) => {
+    if (!addressData || !addressData.address) return;
+    
+    const addr = addressData.address;
+    
+    // Extract building/house number and road
+    const building = addr.house_number || addr.building || "";
+    const road = addr.road || addr.street || "";
+    if (building || road) {
+      setAddressLine1(`${building} ${road}`.trim());
+    }
+    
+    // Extract neighborhood/suburb for address line 2
+    const neighborhood = addr.neighbourhood || addr.suburb || addr.residential || "";
+    if (neighborhood) {
+      setAddressLine2(neighborhood);
+    }
+    
+    // Extract landmark (commercial, amenity, or shop)
+    const landmarkValue = addr.amenity || addr.shop || addr.commercial || "";
+    if (landmarkValue) {
+      setLandmark(landmarkValue);
+    }
+    
+    // Extract area/locality
+    const areaValue = addr.suburb || addr.city_district || addr.neighbourhood || "";
+    if (areaValue) {
+      setArea(areaValue);
+    }
+    
+    // Extract pincode
+    if (addr.postcode) {
+      setPincode(addr.postcode);
+    }
+  };
+
+  // Handle location selection from map
+  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+    setPickupLat(lat);
+    setPickupLng(lng);
+    setPickupText(address);
+    setShowMap(false); // Close map after selection
+    
+    // Fetch detailed address components for autofill
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('Detailed address data:', data);
+        parseAddressComponents(data);
+      })
+      .catch(error => {
+        console.error('Failed to fetch address details:', error);
+      });
+  };
 
   // Update airport location when trip type changes
   React.useEffect(() => {
@@ -58,13 +139,11 @@ export default function BookingPage() {
     setArea("");
     setPincode("");
   }, [tripType]);
-  
-  const pickupRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const dropoffRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const baseFare = selectedVehicle?.base_fare || 0;
   const totalAmount = baseFare; // No taxes, just base fare
 
+  // Fetch vehicles from API
   React.useEffect(() => {
     console.log("Fetching vehicles from /api/vehicles");
     fetch("/api/vehicles")
@@ -88,19 +167,25 @@ export default function BookingPage() {
       });
   }, []);
 
-  const handlePickupChanged = () => {
-    if (pickupRef.current !== null) {
-      const place = pickupRef.current.getPlace();
-      setPickupText(place.formatted_address || place.name || "");
+  // Auto-select vehicle from URL parameter
+  React.useEffect(() => {
+    if (vehicles.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const vehicleName = params.get('vehicle');
+      
+      if (vehicleName) {
+        // Find matching vehicle by name
+        const matchingVehicle = vehicles.find(v => 
+          v.name.toLowerCase() === vehicleName.toLowerCase()
+        );
+        
+        if (matchingVehicle) {
+          setSelectedVehicle(matchingVehicle);
+          console.log('Auto-selected vehicle from URL:', matchingVehicle.name);
+        }
+      }
     }
-  };
-
-  const handleDropoffChanged = () => {
-    if (dropoffRef.current !== null) {
-      const place = dropoffRef.current.getPlace();
-      setDropoffText(place.formatted_address || place.name || "");
-    }
-  };
+  }, [vehicles]); // Run when vehicles are loaded
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
@@ -299,31 +384,62 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <LoadScript 
-                  googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""} 
-                  libraries={libraries}
-                >
-                  <div className="space-y-4">
-                    {tripType === "to_airport" ? (
-                      <>
-                        <div>
-                          <label className="text-xs font-bold text-slate-700 mb-2 block">Pickup Location</label>
-                          <div className="group relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">location_on</span>
-                            <Autocomplete
-                              onLoad={(autocomplete) => pickupRef.current = autocomplete}
-                              onPlaceChanged={handlePickupChanged}
-                            >
-                              <input
-                                type="text"
-                                placeholder="Search your location"
-                                className="input-field"
-                                value={pickupText}
-                                onChange={(e) => setPickupText(e.target.value)}
-                              />
-                            </Autocomplete>
-                          </div>
+                <div className="space-y-4">
+                  {tripType === "to_airport" ? (
+                    <>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+                          <span>Pickup Location</span>
+                          <span className="text-[10px] text-slate-500 font-normal">Click on map or search for precise location</span>
+                        </label>
+                        
+                        {/* Location Action Button */}
+                        <div className="mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowMap(!showMap)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">map</span>
+                            {showMap ? 'Hide Map' : 'Select on Map'}
+                          </button>
                         </div>
+
+                        {/* Map Component - Only render when shown */}
+                        {showMap && (
+                          <div className="mb-4">
+                            <LocationMap 
+                              key="location-map"
+                              onLocationSelect={handleLocationSelect}
+                              initialLocation={pickupLat && pickupLng ? { lat: pickupLat, lng: pickupLng } : undefined}
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="group relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">location_on</span>
+                          <input
+                            type="text"
+                            placeholder="Or type your location manually"
+                            className="input-field"
+                            value={pickupText}
+                            onChange={(e) => setPickupText(e.target.value)}
+                          />
+                        </div>
+                        
+                        {/* Show coordinates if available */}
+                        {pickupLat && pickupLng && (
+                          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+                            <p className="text-xs text-green-700 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                              <span className="font-semibold">Location confirmed:</span> {pickupLat.toFixed(6)}, {pickupLng.toFixed(6)}
+                            </p>
+                            <p className="text-[10px] text-green-600 mt-1">
+                              💡 Tip: Click on the map to adjust your exact pickup point
+                            </p>
+                          </div>
+                        )}
+                      </div>
 
                         {/* Detailed Address Section */}
                         <div className="bg-slate-50 rounded-xl p-4 space-y-3">
@@ -417,24 +533,19 @@ export default function BookingPage() {
                           </div>
                         </div>
 
-                        <div>
-                          <label className="text-xs font-bold text-slate-700 mb-2 block">Dropoff Location</label>
-                          <div className="group relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">flag</span>
-                            <Autocomplete
-                              onLoad={(autocomplete) => dropoffRef.current = autocomplete}
-                              onPlaceChanged={handleDropoffChanged}
-                            >
-                              <input
-                                type="text"
-                                placeholder="Search your destination"
-                                className="input-field"
-                                value={dropoffText}
-                                onChange={(e) => setDropoffText(e.target.value)}
-                              />
-                            </Autocomplete>
-                          </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 mb-2 block">Dropoff Location</label>
+                        <div className="group relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">flag</span>
+                          <input
+                            type="text"
+                            placeholder="Enter your destination (e.g., MG Road, Bangalore)"
+                            className="input-field"
+                            value={dropoffText}
+                            onChange={(e) => setDropoffText(e.target.value)}
+                          />
                         </div>
+                      </div>
 
                         {/* Detailed Address Section */}
                         <div className="bg-slate-50 rounded-xl p-4 space-y-3">
@@ -497,10 +608,9 @@ export default function BookingPage() {
                             />
                           </div>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </LoadScript>
+                    </>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div className="space-y-2">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
+import FloatingContactButtons from "@/components/FloatingContactButtons";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -66,6 +67,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col antialiased">
         {children}
+        <FloatingContactButtons />
       </body>
     </html>
   );

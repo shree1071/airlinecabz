@@ -2,9 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
-  experimental: {
-    optimizePackageImports: ['@react-google-maps/api'],
-  },
   images: {
     remotePatterns: [
       {
