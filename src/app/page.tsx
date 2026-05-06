@@ -180,12 +180,12 @@ export default function LandingPage() {
               Bangalore Airport Taxi
             </p>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.08] tracking-tight drop-shadow-2xl">
-              Hey Buddy!<br />
-              <span className="text-amber-300">where are you</span><br />
-              Flying to?
+              Bangalore's #1<br />
+              <span className="text-amber-300">Airport Taxi</span><br />
+              Pick Up From Anywhere
             </h1>
             <p className="mt-3 sm:mt-4 text-white/80 text-xs sm:text-base max-w-md leading-relaxed drop-shadow">
-              Bangalore's #1 Airport Taxi — Pick Up From Anywhere
+              Safe, professional, and on time — starting at just ₹799.
             </p>
             <a
               href="#booking-panel"
