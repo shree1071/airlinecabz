@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import dayjs, { Dayjs } from 'dayjs';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -74,6 +74,48 @@ export default function BookingPage() {
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  // Get user's current location
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Fetch address from coordinates
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`)
+          .then(res => res.json())
+          .then(data => {
+            setPickupLat(latitude);
+            setPickupLng(longitude);
+            setPickupText(data.display_name);
+            parseAddressComponents(data);
+            setGettingLocation(false);
+          })
+          .catch(error => {
+            console.error('Failed to fetch address:', error);
+            setGettingLocation(false);
+            alert("Failed to get address from location");
+          });
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setGettingLocation(false);
+        alert("Failed to get your location. Please enable location services.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
 
   // Get minimum time for today
   const getMinTime = () => {
@@ -472,12 +514,30 @@ export default function BookingPage() {
                           <span className="text-[10px] text-slate-500 font-normal">Click on map or search for precise location</span>
                         </label>
                         
-                        {/* Location Action Button */}
-                        <div className="mb-3">
+                        {/* Location Action Buttons */}
+                        <div className="mb-3 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={handleUseCurrentLocation}
+                            disabled={gettingLocation}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {gettingLocation ? (
+                              <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+                                Getting...
+                              </>
+                            ) : (
+                              <>
+                                <span className="material-symbols-outlined text-[18px]">my_location</span>
+                                Current Location
+                              </>
+                            )}
+                          </button>
                           <button
                             type="button"
                             onClick={() => setShowMap(!showMap)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all"
                           >
                             <span className="material-symbols-outlined text-[18px]">map</span>
                             {showMap ? 'Hide Map' : 'Select on Map'}
@@ -707,17 +767,11 @@ export default function BookingPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] md:text-xs font-bold font-label text-outline uppercase px-1">Pickup Time</label>
                     <div className="mui-time-picker-wrapper relative">
-                      <TimePicker
+                      <MobileTimePicker
                         value={pickupTime}
                         onChange={(newValue) => setPickupTime(newValue)}
                         disabled={!pickupDate}
                         minTime={getMinTime()}
-                        orientation="landscape"
-                        viewRenderers={{
-                          hours: renderTimeViewClock,
-                          minutes: renderTimeViewClock,
-                          seconds: renderTimeViewClock,
-                        }}
                         slotProps={{
                           textField: {
                             fullWidth: true,
