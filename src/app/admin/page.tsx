@@ -24,6 +24,8 @@ type Booking = {
   landmark?: string;
   area?: string;
   pincode?: string;
+  distance_km?: number;
+  duration_minutes?: number;
 };
 
 type DashboardStats = {
@@ -647,6 +649,15 @@ export default function AdminPage() {
                         <span className="material-symbols-outlined text-green-600 text-base">payments</span>
                         <span className="font-semibold text-green-900">₹{booking.total_amount.toLocaleString()}</span>
                       </div>
+                      {booking.distance_km && (
+                        <div className="flex items-center gap-1.5 bg-cyan-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-cyan-600 text-base">route</span>
+                          <span className="font-semibold text-cyan-900">{booking.distance_km} km</span>
+                          {booking.duration_minutes && (
+                            <span className="text-cyan-700">• {booking.duration_minutes} min</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Timestamps */}

@@ -76,6 +76,15 @@ export default function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   
+  // Distance calculation
+  const [distance, setDistance] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
+  
+  // Kempegowda International Airport coordinates
+  const AIRPORT_LAT = 13.1986;
+  const AIRPORT_LNG = 77.7066;
+  
   // Form validation errors
   const [errors, setErrors] = useState<{
     customerName?: string;
@@ -87,6 +96,72 @@ export default function BookingPage() {
     pickupTime?: string;
     vehicle?: string;
   }>({});
+
+  // Calculate actual driving distance using OpenRouteService API
+  const calculateDrivingDistance = async (startLat: number, startLng: number, endLat: number, endLng: number) => {
+    setCalculatingDistance(true);
+    try {
+      // Using OpenRouteService free API (no key required for basic usage)
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=false`
+      );
+      
+      const data = await response.json();
+      
+      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const distanceInKm = Math.round(route.distance / 100) / 10; // Convert meters to km, round to 1 decimal
+        const durationInMin = Math.round(route.duration / 60); // Convert seconds to minutes
+        
+        setDistance(distanceInKm);
+        setDuration(durationInMin);
+      } else {
+        // Fallback to straight-line distance if routing fails
+        const R = 6371;
+        const dLat = (endLat - startLat) * Math.PI / 180;
+        const dLon = (endLng - startLng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const fallbackDistance = Math.round(R * c * 10) / 10;
+        
+        setDistance(fallbackDistance);
+        setDuration(Math.round(fallbackDistance * 2)); // Rough estimate: 30 km/h average
+      }
+    } catch (error) {
+      console.error('Error calculating distance:', error);
+      // Fallback to straight-line distance
+      const R = 6371;
+      const dLat = (endLat - startLat) * Math.PI / 180;
+      const dLon = (endLng - startLng) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const fallbackDistance = Math.round(R * c * 10) / 10;
+      
+      setDistance(fallbackDistance);
+      setDuration(Math.round(fallbackDistance * 2));
+    } finally {
+      setCalculatingDistance(false);
+    }
+  };
+
+  // Calculate distance when coordinates are available
+  useEffect(() => {
+    if (pickupLat && pickupLng && tripType === "to_airport") {
+      calculateDrivingDistance(pickupLat, pickupLng, AIRPORT_LAT, AIRPORT_LNG);
+    } else if (pickupLat && pickupLng && tripType === "from_airport") {
+      // For from_airport, calculate from airport to dropoff location
+      calculateDrivingDistance(AIRPORT_LAT, AIRPORT_LNG, pickupLat, pickupLng);
+    } else {
+      setDistance(null);
+      setDuration(null);
+    }
+  }, [pickupLat, pickupLng, tripType]);
 
   // Get user's current location
   const handleUseCurrentLocation = () => {
@@ -429,6 +504,8 @@ export default function BookingPage() {
           taxes: 0,
           total_amount: totalAmount,
           status: "pending",
+          distance_km: distance,
+          duration_minutes: duration,
         }),
       });
 
@@ -655,11 +732,31 @@ export default function BookingPage() {
                         
                         {/* Show coordinates if available */}
                         {pickupLat && pickupLng && (
-                          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+                          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-xl space-y-2">
                             <p className="text-xs text-green-700 flex items-center gap-1">
                               <span className="material-symbols-outlined text-[16px]">check_circle</span>
                               <span className="font-semibold">Location confirmed:</span> {pickupLat.toFixed(6)}, {pickupLng.toFixed(6)}
                             </p>
+                            {calculatingDistance && (
+                              <p className="text-xs text-green-600 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+                                Calculating distance...
+                              </p>
+                            )}
+                            {distance !== null && !calculatingDistance && (
+                              <div className="flex items-center gap-3 text-xs">
+                                <div className="flex items-center gap-1 bg-green-100 px-2 py-1 rounded-lg">
+                                  <span className="material-symbols-outlined text-[14px] text-green-700">route</span>
+                                  <span className="font-bold text-green-700">{distance} km</span>
+                                </div>
+                                {duration && (
+                                  <div className="flex items-center gap-1 bg-green-100 px-2 py-1 rounded-lg">
+                                    <span className="material-symbols-outlined text-[14px] text-green-700">schedule</span>
+                                    <span className="font-bold text-green-700">~{duration} min</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             <p className="text-[10px] text-green-600 mt-1">
                               💡 Tip: Click on the map to adjust your exact pickup point
                             </p>
@@ -1032,6 +1129,24 @@ export default function BookingPage() {
                     <span className="opacity-70 font-label">Vehicle</span>
                     <span className="font-bold truncate ml-2">{selectedVehicle?.name || "Not selected"}</span>
                   </div>
+                  {distance !== null && (
+                    <div className="flex justify-between items-center text-xs md:text-sm bg-white/10 px-3 py-2 rounded-lg">
+                      <span className="opacity-90 font-label flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px]">route</span>
+                        Distance
+                      </span>
+                      <span className="font-bold">{distance} km</span>
+                    </div>
+                  )}
+                  {duration !== null && (
+                    <div className="flex justify-between items-center text-xs md:text-sm bg-white/10 px-3 py-2 rounded-lg">
+                      <span className="opacity-90 font-label flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px]">schedule</span>
+                        Est. Time
+                      </span>
+                      <span className="font-bold">{duration} min</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-xs md:text-sm border-t border-white/10 pt-3 md:pt-4">
                     <span className="opacity-70 font-label">Base Fare</span>
                     <span className="font-bold">₹{baseFare.toFixed(2)}</span>

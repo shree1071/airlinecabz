@@ -69,6 +69,8 @@ export async function POST(req: Request) {
       taxes: body.taxes || 0,
       total_amount: body.total_amount,
       status: body.status || "pending",
+      distance_km: body.distance_km || null,
+      duration_minutes: body.duration_minutes || null,
     };
 
     const { data, error } = await insforge.database

@@ -17,6 +17,8 @@ type Booking = {
   base_fare: number;
   total_amount: number;
   created_at: string;
+  distance_km?: number;
+  duration_minutes?: number;
 };
 
 function BookingConfirmationContent() {
@@ -72,6 +74,7 @@ function BookingConfirmationContent() {
       `Dropoff: ${booking.dropoff_location}%0A` +
       `Date: ${new Date(booking.pickup_date).toLocaleString()}%0A` +
       `Vehicle: ${booking.vehicle_type}%0A` +
+      (booking.distance_km ? `Distance: ${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}%0A` : '') +
       `Amount: ₹${booking.total_amount}%0A%0A` +
       `*Additional charges may apply (toll, parking)`;
 
@@ -210,7 +213,25 @@ function BookingConfirmationContent() {
     doc.setFont('helvetica', 'bold');
     doc.text(booking.vehicle_type.toUpperCase(), margin + 35, yPos + 23);
     
-    yPos += 35;
+    yPos += 28;
+    
+    // Distance Section (if available)
+    if (booking.distance_km) {
+      doc.setFillColor(bgGray[0], bgGray[1], bgGray[2]);
+      doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 12, 2, 2, 'F');
+      
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Distance:', margin + 5, yPos + 8);
+      doc.setFont('helvetica', 'bold');
+      const distanceText = `${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}`;
+      doc.text(distanceText, margin + 35, yPos + 8);
+      
+      yPos += 19;
+    } else {
+      yPos += 7;
+    }
     
     // Payment Summary Section
     doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
@@ -356,6 +377,23 @@ function BookingConfirmationContent() {
                 <p className="text-sm font-semibold text-slate-900">{booking.vehicle_type}</p>
               </div>
             </div>
+
+            {booking.distance_km && (
+              <div className="bg-cyan-50 rounded-2xl p-4 border-2 border-cyan-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-cyan-600">route</span>
+                    <span className="text-sm font-bold text-slate-700">Distance</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-cyan-900">{booking.distance_km} km</p>
+                    {booking.duration_minutes && (
+                      <p className="text-xs text-cyan-700">~{booking.duration_minutes} minutes</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200">
               <div className="flex justify-between items-center mb-2">
