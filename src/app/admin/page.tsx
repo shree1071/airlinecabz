@@ -53,6 +53,14 @@ export default function AdminPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedBookingForConfirm, setSelectedBookingForConfirm] = useState<Booking | null>(null);
+  const [confirmFormData, setConfirmFormData] = useState({
+    paymentMethod: 'cash',
+    driverName: '',
+    driverPhone: '',
+    vehicleNumber: '',
+  });
   const [stats, setStats] = useState<DashboardStats>({
     totalRevenue: 0,
     todayRevenue: 0,
@@ -197,79 +205,113 @@ export default function AdminPage() {
     };
   }, [isAuthenticated]);
 
+  // Handle opening confirm modal
+  const openConfirmModal = (booking: Booking) => {
+    setSelectedBookingForConfirm(booking);
+    setConfirmFormData({
+      paymentMethod: 'cash',
+      driverName: '',
+      driverPhone: '',
+      vehicleNumber: '',
+    });
+    setShowConfirmModal(true);
+  };
+
+  // Handle confirming booking
+  const handleConfirmBooking = async () => {
+    if (!selectedBookingForConfirm) return;
+
+    // Validate required fields
+    if (!confirmFormData.driverName.trim()) {
+      alert('Driver name is required');
+      return;
+    }
+    if (!confirmFormData.driverPhone.trim()) {
+      alert('Driver phone is required');
+      return;
+    }
+    if (!confirmFormData.vehicleNumber.trim()) {
+      alert('Vehicle number is required');
+      return;
+    }
+
+    try {
+      // Move to confirmed_rides table
+      const { error: insertError } = await insforge.database
+        .from('confirmed_rides')
+        .insert([{
+          booking_id: selectedBookingForConfirm.id,
+          customer_name: selectedBookingForConfirm.customer_name,
+          customer_email: selectedBookingForConfirm.customer_email,
+          trip_type: selectedBookingForConfirm.trip_type || 'to_airport',
+          pickup_location: selectedBookingForConfirm.pickup_location,
+          dropoff_location: selectedBookingForConfirm.dropoff_location,
+          address_line1: selectedBookingForConfirm.address_line1 || null,
+          address_line2: selectedBookingForConfirm.address_line2 || null,
+          landmark: selectedBookingForConfirm.landmark || null,
+          area: selectedBookingForConfirm.area || null,
+          pincode: selectedBookingForConfirm.pincode || null,
+          pickup_date: selectedBookingForConfirm.pickup_date,
+          vehicle_type: selectedBookingForConfirm.vehicle_type,
+          base_fare: selectedBookingForConfirm.base_fare,
+          taxes: selectedBookingForConfirm.taxes,
+          total_amount: selectedBookingForConfirm.total_amount,
+          payment_method: confirmFormData.paymentMethod,
+          payment_status: 'paid',
+          ride_status: 'scheduled',
+          driver_name: confirmFormData.driverName,
+          driver_phone: confirmFormData.driverPhone,
+          vehicle_number: confirmFormData.vehicleNumber,
+          distance_km: selectedBookingForConfirm.distance_km || null,
+          duration_minutes: selectedBookingForConfirm.duration_minutes || null,
+        }]);
+
+      if (insertError) {
+        console.error('Error creating confirmed ride:', insertError);
+        alert('Failed to confirm booking');
+        return;
+      }
+
+      // Update booking status
+      const { error: updateError } = await insforge.database
+        .from('bookings')
+        .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+        .eq('id', selectedBookingForConfirm.id);
+
+      if (updateError) {
+        console.error('Error updating booking:', updateError);
+        alert('Failed to update booking status');
+        return;
+      }
+
+      setShowConfirmModal(false);
+      setSelectedBookingForConfirm(null);
+    } catch (err) {
+      console.error('Error confirming booking:', err);
+      alert('Failed to confirm booking');
+    }
+  };
+
   // Handle status update
   const updateStatus = async (id: string, newStatus: string) => {
-    // If confirming a booking, show payment confirmation dialog
+    // If confirming a booking, show modal instead
     if (newStatus === 'confirmed') {
-      const paymentMethod = prompt('Payment Method (cash/online/card):');
-      if (!paymentMethod) return;
-
-      const driverName = prompt('Assign Driver Name (optional):');
-      const driverPhone = prompt('Driver Phone (optional):');
-      const vehicleNumber = prompt('Vehicle Number (optional):');
-
-      // Get the booking details
       const booking = bookings.find(b => b.id === id);
-      if (!booking) return;
-
-      try {
-        // Move to confirmed_rides table
-        const { error: insertError } = await insforge.database
-          .from('confirmed_rides')
-          .insert([{
-            booking_id: id,
-            customer_name: booking.customer_name,
-            customer_email: booking.customer_email,
-            trip_type: booking.trip_type || 'to_airport',
-            pickup_location: booking.pickup_location,
-            dropoff_location: booking.dropoff_location,
-            pickup_date: booking.pickup_date,
-            vehicle_type: booking.vehicle_type,
-            base_fare: booking.base_fare,
-            taxes: booking.taxes,
-            total_amount: booking.total_amount,
-            payment_method: paymentMethod,
-            payment_status: 'paid',
-            ride_status: 'scheduled',
-            driver_name: driverName || null,
-            driver_phone: driverPhone || null,
-            vehicle_number: vehicleNumber || null,
-          }]);
-
-        if (insertError) {
-          console.error('Error creating confirmed ride:', insertError);
-          alert('Failed to confirm booking');
-          return;
-        }
-
-        // Update booking status
-        const { error: updateError } = await insforge.database
-          .from('bookings')
-          .update({ status: 'confirmed', updated_at: new Date().toISOString() })
-          .eq('id', id);
-
-        if (updateError) {
-          console.error('Error updating booking:', updateError);
-          alert('Failed to update booking status');
-          return;
-        }
-
-        alert('Booking confirmed and moved to active rides!');
-      } catch (err) {
-        console.error('Error confirming booking:', err);
-        alert('Failed to confirm booking');
+      if (booking) {
+        openConfirmModal(booking);
       }
-    } else {
-      // Regular status update
-      const { error } = await insforge.database
-        .from('bookings')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', id);
+      return;
+    }
 
-      if (error) {
-        console.error('Error updating status:', error);
-        alert('Failed to update status');
-      }
+    // Regular status update for other statuses
+    const { error } = await insforge.database
+      .from('bookings')
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
     }
   };
 
@@ -299,6 +341,11 @@ export default function AdminPage() {
     localStorage.removeItem("admin_auth");
     setPassword("");
   };
+
+  // Separate pending and confirmed bookings
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+  const otherBookings = bookings.filter(b => b.status !== 'pending' && b.status !== 'confirmed');
 
   // Filter bookings with search and date
   const filteredBookings = bookings.filter(b => {
@@ -576,14 +623,190 @@ export default function AdminPage() {
           <div className="text-center py-12">
             <p className="text-slate-600">Loading bookings...</p>
           </div>
-        ) : filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">inbox</span>
-            <p className="text-slate-600">No bookings found</p>
-          </div>
         ) : (
+          <>
+            {/* Pending Bookings Section */}
+            {(filter === 'all' || filter === 'pending') && pendingBookings.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-8 bg-orange-500 rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-slate-900">Pending Approval</h2>
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-bold">{pendingBookings.length}</span>
+                </div>
+                <div className="space-y-4">
+                  {pendingBookings.filter(b => {
+                    const searchLower = searchQuery.toLowerCase();
+                    const searchMatch = !searchQuery || 
+                      b.customer_name.toLowerCase().includes(searchLower) ||
+                      b.customer_email.toLowerCase().includes(searchLower) ||
+                      b.pickup_location.toLowerCase().includes(searchLower) ||
+                      b.dropoff_location.toLowerCase().includes(searchLower) ||
+                      b.vehicle_type.toLowerCase().includes(searchLower);
+                    return searchMatch;
+                  }).map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="bg-white rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-orange-500"
+                    >
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  {/* Main Info */}
+                  <div className="flex-1 space-y-3">
+                    {/* Customer Info */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-blue-600">person</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900">{booking.customer_name}</p>
+                        <p className="text-xs text-slate-500">{booking.customer_email}</p>
+                      </div>
+                      <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
+                        booking.trip_type === 'to_airport' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {booking.trip_type === 'to_airport' ? '✈️ To Airport' : '🏠 From Airport'}
+                      </span>
+                    </div>
+                    
+                    {/* Route Info */}
+                    <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-green-600 text-lg mt-0.5">trip_origin</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-slate-500 font-semibold">PICKUP</p>
+                          <p className="text-sm text-slate-900">{booking.pickup_location}</p>
+                          {booking.address_line1 && (
+                            <p className="text-xs text-slate-600 mt-1">
+                              {[booking.address_line1, booking.address_line2, booking.landmark, booking.area, booking.pincode].filter(Boolean).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="border-l-2 border-dashed border-slate-300 ml-2 h-4"></div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-red-600 text-lg mt-0.5">location_on</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-slate-500 font-semibold">DROPOFF</p>
+                          <p className="text-sm text-slate-900">{booking.dropoff_location}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Booking Details */}
+                    <div className="flex flex-wrap gap-3 text-xs">
+                      <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg">
+                        <span className="material-symbols-outlined text-purple-600 text-base">directions_car</span>
+                        <span className="font-semibold text-purple-900">{booking.vehicle_type}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-lg">
+                        <span className="material-symbols-outlined text-blue-600 text-base">calendar_today</span>
+                        <span className="font-semibold text-blue-900">{new Date(booking.pickup_date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-lg">
+                        <span className="material-symbols-outlined text-orange-600 text-base">schedule</span>
+                        <span className="font-semibold text-orange-900">{new Date(booking.pickup_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-lg">
+                        <span className="material-symbols-outlined text-green-600 text-base">payments</span>
+                        <span className="font-semibold text-green-900">₹{booking.total_amount.toLocaleString()}</span>
+                      </div>
+                      {booking.distance_km && (
+                        <div className="flex items-center gap-1.5 bg-cyan-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-cyan-600 text-base">route</span>
+                          <span className="font-semibold text-cyan-900">{booking.distance_km} km</span>
+                          {booking.duration_minutes && (
+                            <span className="text-cyan-700">• {booking.duration_minutes} min</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamps */}
+                    <div className="flex gap-4 text-[10px] text-slate-400">
+                      <span>Created: {new Date(booking.created_at).toLocaleString()}</span>
+                      <span>Updated: {new Date(booking.updated_at).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex lg:flex-col items-center gap-2">
+                    {booking.status === 'pending' ? (
+                      <button
+                        onClick={() => openConfirmModal(booking)}
+                        className="px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all min-w-[140px] flex items-center justify-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-lg">check_circle</span>
+                        Confirm Ride
+                      </button>
+                    ) : (
+                      <select
+                        value={booking.status}
+                        onChange={(e) => updateStatus(booking.id, e.target.value)}
+                        className={`px-3 py-2 rounded-xl text-sm font-semibold border-2 transition-colors min-w-[140px] ${
+                          booking.status === 'pending' ? 'border-orange-300 bg-orange-50 text-orange-700' :
+                          booking.status === 'confirmed' ? 'border-blue-300 bg-blue-50 text-blue-700' :
+                          booking.status === 'completed' ? 'border-green-300 bg-green-50 text-green-700' :
+                          'border-red-300 bg-red-50 text-red-700'
+                        }`}
+                      >
+                        <option value="pending">⏳ Pending</option>
+                        <option value="confirmed">✅ Confirmed</option>
+                        <option value="completed">🎉 Completed</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                      </select>
+                    )}
+                    
+                    <div className="flex gap-2">
+                      <a
+                        href={`tel:${booking.customer_email}`}
+                        className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                        title="Call customer"
+                      >
+                        <span className="material-symbols-outlined text-xl">call</span>
+                      </a>
+                      
+                      <a
+                        href={`mailto:${booking.customer_email}`}
+                        className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                        title="Email customer"
+                      >
+                        <span className="material-symbols-outlined text-xl">email</span>
+                      </a>
+                      
+                      <button
+                        onClick={() => deleteBooking(booking.id, booking.customer_name)}
+                        className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                        title="Delete booking"
+                      >
+                        <span className="material-symbols-outlined text-xl">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Confirmed Bookings Section */}
+      {(filter === 'all' || filter === 'confirmed') && confirmedBookings.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-1 h-8 bg-blue-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-slate-900">Confirmed Rides</h2>
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">{confirmedBookings.length}</span>
+          </div>
           <div className="space-y-4">
-            {filteredBookings.map((booking) => (
+            {confirmedBookings.filter(b => {
+              const searchLower = searchQuery.toLowerCase();
+              const searchMatch = !searchQuery || 
+                b.customer_name.toLowerCase().includes(searchLower) ||
+                b.customer_email.toLowerCase().includes(searchLower) ||
+                b.pickup_location.toLowerCase().includes(searchLower) ||
+                b.dropoff_location.toLowerCase().includes(searchLower) ||
+                b.vehicle_type.toLowerCase().includes(searchLower);
+              return searchMatch;
+            }).map((booking) => (
               <div
                 key={booking.id}
                 className="bg-white rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-blue-500"
@@ -672,12 +895,7 @@ export default function AdminPage() {
                     <select
                       value={booking.status}
                       onChange={(e) => updateStatus(booking.id, e.target.value)}
-                      className={`px-3 py-2 rounded-xl text-sm font-semibold border-2 transition-colors min-w-[140px] ${
-                        booking.status === 'pending' ? 'border-orange-300 bg-orange-50 text-orange-700' :
-                        booking.status === 'confirmed' ? 'border-blue-300 bg-blue-50 text-blue-700' :
-                        booking.status === 'completed' ? 'border-green-300 bg-green-50 text-green-700' :
-                        'border-red-300 bg-red-50 text-red-700'
-                      }`}
+                      className="px-3 py-2 rounded-xl text-sm font-semibold border-2 border-blue-300 bg-blue-50 text-blue-700 transition-colors min-w-[140px]"
                     >
                       <option value="pending">⏳ Pending</option>
                       <option value="confirmed">✅ Confirmed</option>
@@ -715,8 +933,150 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      {/* No Results */}
+      {filteredBookings.length === 0 && !loading && (
+        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+          <span className="material-symbols-outlined text-slate-300 text-6xl mb-4">inbox</span>
+          <p className="text-slate-600">No bookings found</p>
+        </div>
+      )}
+    </>
+  )}
+</main>
+
+{/* Confirmation Modal */}
+{showConfirmModal && selectedBookingForConfirm && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      {/* Modal Header */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 rounded-t-3xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-2xl">check_circle</span>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Confirm Booking</h2>
+              <p className="text-green-100 text-sm">Complete ride details</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowConfirmModal(false)}
+            className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-white">close</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Modal Body */}
+      <div className="p-6 space-y-6">
+        {/* Customer Info */}
+        <div className="bg-slate-50 rounded-2xl p-4">
+          <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-blue-600">person</span>
+            Customer Details
+          </h3>
+          <div className="space-y-2 text-sm">
+            <p><span className="font-semibold">Name:</span> {selectedBookingForConfirm.customer_name}</p>
+            <p><span className="font-semibold">Email:</span> {selectedBookingForConfirm.customer_email}</p>
+            <p><span className="font-semibold">Vehicle:</span> {selectedBookingForConfirm.vehicle_type}</p>
+            <p><span className="font-semibold">Amount:</span> ₹{selectedBookingForConfirm.total_amount.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Payment Method */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Payment Method <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            {['cash', 'online', 'card'].map((method) => (
+              <button
+                key={method}
+                onClick={() => setConfirmFormData(prev => ({ ...prev, paymentMethod: method }))}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  confirmFormData.paymentMethod === method
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <span className="material-symbols-outlined text-2xl mb-1">
+                  {method === 'cash' ? 'payments' : method === 'online' ? 'smartphone' : 'credit_card'}
+                </span>
+                <p className="text-sm font-semibold capitalize">{method}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Driver Name */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Driver Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={confirmFormData.driverName}
+            onChange={(e) => setConfirmFormData(prev => ({ ...prev, driverName: e.target.value }))}
+            placeholder="Enter driver name"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-green-500 focus:outline-none transition-colors"
+            required
+          />
+        </div>
+
+        {/* Driver Phone */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Driver Phone <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            value={confirmFormData.driverPhone}
+            onChange={(e) => setConfirmFormData(prev => ({ ...prev, driverPhone: e.target.value }))}
+            placeholder="Enter driver phone number"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-green-500 focus:outline-none transition-colors"
+            required
+          />
+        </div>
+
+        {/* Vehicle Number */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Vehicle Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={confirmFormData.vehicleNumber}
+            onChange={(e) => setConfirmFormData(prev => ({ ...prev, vehicleNumber: e.target.value.toUpperCase() }))}
+            placeholder="e.g., KA01AB1234"
+            className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-green-500 focus:outline-none transition-colors uppercase"
+            required
+          />
+        </div>
+      </div>
+
+      {/* Modal Footer */}
+      <div className="p-6 bg-slate-50 rounded-b-3xl flex gap-3">
+        <button
+          onClick={() => setShowConfirmModal(false)}
+          className="flex-1 px-6 py-3 rounded-xl border-2 border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleConfirmBooking}
+          className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+        >
+          Confirm Ride
+        </button>
+      </div>
     </div>
+  </div>
+)}
+</div>
   );
 }
