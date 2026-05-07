@@ -392,11 +392,18 @@ export default function AdminPage() {
           
           <div className="flex items-center gap-3">
             <a
+              href="/admin/vehicles"
+              className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">garage</span>
+              <span className="hidden sm:inline">Manage Vehicles</span>
+            </a>
+            <a
               href="/admin/rides"
               className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">directions_car</span>
-              Active Rides
+              <span className="hidden sm:inline">Active Rides</span>
             </a>
             <button
               onClick={handleLogout}
