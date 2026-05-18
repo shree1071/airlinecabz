@@ -9,6 +9,7 @@ type Booking = {
   customer_email: string;
   customer_phone?: string;
   trip_type?: string;
+  terminal?: string;
   pickup_location: string;
   dropoff_location: string;
   pickup_date: string;
@@ -244,6 +245,7 @@ export default function AdminPage() {
           customer_name: selectedBookingForConfirm.customer_name,
           customer_email: selectedBookingForConfirm.customer_email,
           trip_type: selectedBookingForConfirm.trip_type || 'to_airport',
+          terminal: selectedBookingForConfirm.terminal || 'terminal1',
           pickup_location: selectedBookingForConfirm.pickup_location,
           dropoff_location: selectedBookingForConfirm.dropoff_location,
           address_line1: selectedBookingForConfirm.address_line1 || null,
@@ -321,6 +323,19 @@ export default function AdminPage() {
       return;
     }
 
+    // First delete any related confirmed_rides (foreign key constraint prevents booking deletion otherwise)
+    const { error: rideDeleteError } = await insforge.database
+      .from("confirmed_rides")
+      .delete()
+      .eq("booking_id", id);
+
+    if (rideDeleteError) {
+      console.error("Error deleting related confirmed ride:", rideDeleteError);
+      alert("Failed to delete booking (could not remove related ride data)");
+      return;
+    }
+
+    // Now safe to delete the booking
     const { error } = await insforge.database
       .from("bookings")
       .delete()
@@ -335,6 +350,41 @@ export default function AdminPage() {
     }
   };
 
+
+  // Open WhatsApp with pre-filled booking confirmation message
+  const openWhatsApp = (booking: Booking) => {
+    const rawPhone = booking.customer_phone?.replace(/[^0-9]/g, "");
+    if (!rawPhone) {
+      alert("No phone number on record for this customer.\nPlease call or email them directly.");
+      return;
+    }
+    const phone = rawPhone.startsWith("91") ? rawPhone : `91${rawPhone}`;
+
+    const pickupDate = new Date(booking.pickup_date);
+    const dateStr = pickupDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    const timeStr = pickupDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    const tripLabel = booking.trip_type === "to_airport" ? "To Airport ✈️" : "From Airport 🏠";
+
+    const lines = [
+      `Hello ${booking.customer_name} 👋`,
+      ``,
+      `Your *AirlineCabz* booking is confirmed! Here are your details:`,
+      ``,
+      `🚖 *Trip:* ${tripLabel}`,
+      `📍 *Pickup:* ${booking.pickup_location}`,
+      `🏁 *Drop:* ${booking.dropoff_location}`,
+      `📅 *Date & Time:* ${dateStr} at ${timeStr}`,
+      `🚗 *Vehicle:* ${booking.vehicle_type}`,
+      `💰 *Total:* ₹${booking.total_amount.toLocaleString()}`,
+      ``,
+      `Our team will be in touch shortly with driver details. For queries, reply here anytime.`,
+      ``,
+      `Thank you for choosing AirlineCabz! 🙏`,
+    ];
+
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
+    window.open(waUrl, "_blank");
+  };
   // Handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -693,6 +743,14 @@ export default function AdminPage() {
                     
                     {/* Booking Details */}
                     <div className="flex flex-wrap gap-3 text-xs">
+                      {booking.terminal && (
+                        <div className="flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-indigo-600 text-base">terminal</span>
+                          <span className="font-semibold text-indigo-900">
+                            {booking.terminal === 'terminal1' ? 'Terminal 1' : 'Terminal 2'}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg">
                         <span className="material-symbols-outlined text-purple-600 text-base">directions_car</span>
                         <span className="font-semibold text-purple-900">{booking.vehicle_type}</span>
@@ -747,42 +805,6 @@ export default function AdminPage() {
                           booking.status === 'completed' ? 'border-green-300 bg-green-50 text-green-700' :
                           'border-red-300 bg-red-50 text-red-700'
                         }`}
-                      >
-                        <option value="pending">⏳ Pending</option>
-                        <option value="confirmed">✅ Confirmed</option>
-                        <option value="completed">🎉 Completed</option>
-                        <option value="cancelled">❌ Cancelled</option>
-                      </select>
-                    )}
-                    
-                    <div className="flex gap-2">
-                      <a
-                        href={`tel:${booking.customer_email}`}
-                        className="p-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                        title="Call customer"
-                      >
-                        <span className="material-symbols-outlined text-xl">call</span>
-                      </a>
-                      
-                      <a
-                        href={`mailto:${booking.customer_email}`}
-                        className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                        title="Email customer"
-                      >
-                        <span className="material-symbols-outlined text-xl">email</span>
-                      </a>
-                      
-                      <button
-                        onClick={() => deleteBooking(booking.id, booking.customer_name)}
-                        className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                        title="Delete booking"
-                      >
-                        <span className="material-symbols-outlined text-xl">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             ))}
           </div>
         </div>
@@ -856,6 +878,14 @@ export default function AdminPage() {
                     
                     {/* Booking Details */}
                     <div className="flex flex-wrap gap-3 text-xs">
+                      {booking.terminal && (
+                        <div className="flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-lg">
+                          <span className="material-symbols-outlined text-indigo-600 text-base">terminal</span>
+                          <span className="font-semibold text-indigo-900">
+                            {booking.terminal === 'terminal1' ? 'Terminal 1' : 'Terminal 2'}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg">
                         <span className="material-symbols-outlined text-purple-600 text-base">directions_car</span>
                         <span className="font-semibold text-purple-900">{booking.vehicle_type}</span>
@@ -1080,3 +1110,5 @@ export default function AdminPage() {
 </div>
   );
 }
+
+

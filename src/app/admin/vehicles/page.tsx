@@ -48,6 +48,7 @@ export default function VehicleManagementPage() {
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Show toast notification
   const showToast = (message: string, type: Toast["type"]) => {
@@ -96,6 +97,52 @@ export default function VehicleManagementPage() {
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Handle image file upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast("Please select an image file", "error");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image size must be less than 5MB", "error");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Create form data
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      // Upload to public folder via API
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        setFormData(prev => ({ ...prev, image_url: data.url }));
+        showToast("Image uploaded successfully", "success");
+      } else {
+        showToast(data.error || "Failed to upload image", "error");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      showToast("Failed to upload image", "error");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   // Handle form input changes
@@ -217,7 +264,15 @@ export default function VehicleManagementPage() {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Failed to delete vehicle");
+      // Check if response has content before parsing JSON
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (!res.ok) {
+        // Show specific error message from API
+        showToast(data.error || `Failed to delete vehicle (${res.status})`, "error");
+        return;
+      }
 
       showToast(`${name} deleted successfully`, "success");
       await fetchVehicles();
@@ -433,12 +488,19 @@ export default function VehicleManagementPage() {
               >
                 {/* Vehicle Image */}
                 <div className="relative h-48 bg-gradient-to-br from-slate-50 to-slate-100">
-                  <Image
-                    src={vehicle.image_url}
-                    alt={vehicle.name}
-                    fill
-                    className="object-contain p-4 group-hover:scale-110 transition-transform"
-                  />
+                  {vehicle.image_url && vehicle.image_url.trim() !== '' ? (
+                    <Image
+                      src={vehicle.image_url}
+                      alt={vehicle.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                      className="object-contain p-4 group-hover:scale-110 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <span className="material-symbols-outlined text-6xl">directions_car</span>
+                    </div>
+                  )}
                   <div className="absolute top-3 right-3 flex gap-2">
                     {vehicle.is_ev && (
                       <div className="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg flex items-center gap-1">
@@ -691,13 +753,35 @@ export default function VehicleManagementPage() {
                   <span className="material-symbols-outlined text-[18px]">image</span>
                   Image URL *
                 </label>
+                
+                {/* File Upload Option */}
+                <div className="mb-3">
+                  <label className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 border-dashed rounded-xl cursor-pointer hover:bg-blue-100 transition-all">
+                    <span className="material-symbols-outlined text-blue-600">upload</span>
+                    <span className="text-sm font-semibold text-blue-700">
+                      {uploadingImage ? "Uploading..." : "Upload Image from Computer"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">OR</span>
+                </div>
+
                 <input
                   type="text"
                   name="image_url"
                   value={formData.image_url}
                   onChange={handleInputChange}
                   placeholder="/imgi_9_innova.png"
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm ${
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm mt-3 ${
                     formErrors.image_url ? "border-red-500" : "border-slate-200 focus:border-blue-500"
                   }`}
                 />
@@ -709,8 +793,24 @@ export default function VehicleManagementPage() {
                 )}
                 <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">info</span>
-                  Upload image to /public folder first, then enter the path
+                  Upload an image or enter the path manually
                 </p>
+                
+                {/* Image Preview */}
+                {formData.image_url && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Preview:</p>
+                    <div className="relative h-32 bg-white rounded-lg overflow-hidden">
+                      <Image
+                        src={formData.image_url}
+                        alt="Preview"
+                        fill
+                        sizes="300px"
+                        className="object-contain p-2"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Checkboxes */}

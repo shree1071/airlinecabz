@@ -56,6 +56,7 @@ export async function POST(req: Request) {
       customer_name: body.customer_name,
       customer_email: body.customer_email,
       trip_type: body.trip_type || "to_airport",
+      terminal: body.terminal || "terminal1",
       pickup_location: body.pickup_location,
       dropoff_location: body.dropoff_location,
       address_line1: body.address_line1 || null,

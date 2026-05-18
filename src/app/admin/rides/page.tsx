@@ -11,6 +11,7 @@ type ConfirmedRide = {
   customer_email: string;
   customer_phone: string | null;
   trip_type: string;
+  terminal?: string;
   pickup_location: string;
   dropoff_location: string;
   pickup_date: string;
@@ -214,6 +215,11 @@ export default function ActiveRidesPage() {
                       <div>
                         <p className="text-slate-700">{ride.pickup_location}</p>
                         <p className="text-slate-500 text-xs">to {ride.dropoff_location}</p>
+                        {ride.terminal && (
+                          <p className="text-blue-600 text-xs font-semibold mt-1">
+                            🛫 {ride.terminal === 'terminal1' ? 'Terminal 1' : 'Terminal 2'}
+                          </p>
+                        )}
                       </div>
                     </div>
                     

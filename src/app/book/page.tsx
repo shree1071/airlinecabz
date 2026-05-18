@@ -54,6 +54,7 @@ export default function BookingPage() {
   
   // Form State
   const [tripType, setTripType] = useState<"to_airport" | "from_airport">("to_airport");
+  const [terminal, setTerminal] = useState<"terminal1" | "terminal2">("terminal1");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [pickupText, setPickupText] = useState("");
@@ -328,13 +329,14 @@ export default function BookingPage() {
       });
   };
 
-  // Update airport location when trip type changes
+  // Update airport location when trip type or terminal changes
   React.useEffect(() => {
+    const airportLocation = `Kempegowda International Airport - ${terminal === "terminal1" ? "Terminal 1" : "Terminal 2"}, Bangalore`;
     if (tripType === "to_airport") {
-      setDropoffText("Kempegowda International Airport, Bangalore");
+      setDropoffText(airportLocation);
       setPickupText("");
     } else {
-      setPickupText("Kempegowda International Airport, Bangalore");
+      setPickupText(airportLocation);
       setDropoffText("");
     }
     // Clear detailed address when switching
@@ -343,7 +345,7 @@ export default function BookingPage() {
     setLandmark("");
     setArea("");
     setPincode("");
-  }, [tripType]);
+  }, [tripType, terminal]);
 
   const baseFare = selectedVehicle?.base_fare || 0;
   const totalAmount = baseFare; // No taxes, just base fare
@@ -473,13 +475,15 @@ export default function BookingPage() {
       pincode && `PIN: ${pincode}`
     ].filter(Boolean).join(", ");
 
+    const airportLocation = `Kempegowda International Airport - ${terminal === "terminal1" ? "Terminal 1" : "Terminal 2"}, Bangalore`;
+    
     const finalPickupLocation = tripType === "to_airport" 
       ? (detailedAddress || pickupText)
-      : "Kempegowda International Airport, Bangalore";
+      : airportLocation;
     
     const finalDropoffLocation = tripType === "from_airport"
       ? (detailedAddress || dropoffText)
-      : "Kempegowda International Airport, Bangalore";
+      : airportLocation;
 
     setSubmitting(true);
 
@@ -491,6 +495,7 @@ export default function BookingPage() {
           customer_name: customerName,
           customer_email: customerEmail,
           trip_type: tripType,
+          terminal: terminal,
           pickup_location: finalPickupLocation,
           dropoff_location: finalDropoffLocation,
           address_line1: addressLine1,
@@ -654,6 +659,43 @@ export default function BookingPage() {
                         Coming from Airport
                       </span>
                       <span className="text-[10px] text-slate-500">Airport → Home</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Terminal Selector */}
+                <div className="space-y-3">
+                  <label className="text-xs md:text-sm font-bold font-label text-outline uppercase px-1">Airport Terminal</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setTerminal("terminal1")}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        terminal === "terminal1"
+                          ? "bg-primary-container/10 border-primary shadow-md"
+                          : "bg-surface-container-low border-outline-variant/20 hover:border-primary/30"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-2xl text-primary">terminal</span>
+                      <span className={`text-xs md:text-sm font-bold ${terminal === "terminal1" ? "text-primary" : "text-on-surface"}`}>
+                        Terminal 1
+                      </span>
+                      <span className="text-[10px] text-slate-500">Domestic Flights</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTerminal("terminal2")}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        terminal === "terminal2"
+                          ? "bg-primary-container/10 border-primary shadow-md"
+                          : "bg-surface-container-low border-outline-variant/20 hover:border-primary/30"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-2xl text-primary">terminal</span>
+                      <span className={`text-xs md:text-sm font-bold ${terminal === "terminal2" ? "text-primary" : "text-on-surface"}`}>
+                        Terminal 2
+                      </span>
+                      <span className="text-[10px] text-slate-500">International Flights</span>
                     </button>
                   </div>
                 </div>
@@ -832,7 +874,7 @@ export default function BookingPage() {
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60">flag</span>
                             <input
                               type="text"
-                              value="Kempegowda International Airport, Bangalore"
+                              value={`Kempegowda International Airport - ${terminal === "terminal1" ? "Terminal 1" : "Terminal 2"}, Bangalore`}
                               className="input-field bg-slate-50 cursor-not-allowed"
                               readOnly
                               disabled
@@ -848,7 +890,7 @@ export default function BookingPage() {
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60">location_on</span>
                             <input
                               type="text"
-                              value="Kempegowda International Airport, Bangalore"
+                              value={`Kempegowda International Airport - ${terminal === "terminal1" ? "Terminal 1" : "Terminal 2"}, Bangalore`}
                               className="input-field bg-slate-50 cursor-not-allowed"
                               readOnly
                               disabled

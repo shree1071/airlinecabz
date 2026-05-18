@@ -1,26 +1,29 @@
+
 import { NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
-
 export async function GET() {
   try {
     const { data, error } = await insforge.database
       .from("vehicle_types")
       .select("*")
       .order("sort_order", { ascending: true });
-
     if (error) {
+
       console.error("Error fetching vehicles:", error);
+      
       return NextResponse.json({ error: "Failed to fetch vehicles" }, { status: 500 });
+
     }
 
     return NextResponse.json({ vehicles: data });
+    
   } catch (err) {
+
     console.error("Unexpected error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, 
+      { status: 500 });
   }
 }
-
-// POST - Create new vehicle
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -32,9 +35,7 @@ export async function POST(request: Request) {
       .order("sort_order", { ascending: false })
       .limit(1)
       .single();
-    
     const nextSortOrder = (maxSortData?.sort_order || 0) + 1;
-
     const { data, error } = await insforge.database
       .from("vehicle_types")
       .insert({
@@ -51,16 +52,18 @@ export async function POST(request: Request) {
       })
       .select()
       .single();
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
     return NextResponse.json({ vehicle: data });
   } catch (err) {
+
     return NextResponse.json(
+
       { error: "Failed to create vehicle" },
+
       { status: 500 }
+      
     );
   }
 }
