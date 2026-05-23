@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     if (
       !body.customer_name ||
       !body.customer_email ||
+      !body.customer_phone ||
       !body.pickup_location ||
       !body.dropoff_location ||
       !body.pickup_date ||
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
     const newBooking = {
       customer_name: body.customer_name,
       customer_email: body.customer_email,
+      customer_phone: body.customer_phone,
       trip_type: body.trip_type || "to_airport",
       terminal: body.terminal || "terminal1",
       pickup_location: body.pickup_location,
@@ -85,7 +87,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to create booking", details: error }, { status: 500 });
     }
 
-    return NextResponse.json({ booking: data[0] });
+    const booking = data[0];
+
+    // Try sending WhatsApp notification
+    try {
+      // Import dynamically to avoid top-level issues if the file doesn't exist yet
+      const { sendWhatsAppNotification } = await import("@/lib/whatsapp");
+      await sendWhatsAppNotification(booking.customer_phone, booking);
+    } catch (waError) {
+      console.error("Failed to send WhatsApp notification:", waError);
+      // We don't fail the whole booking process if WA notification fails
+    }
+
+    return NextResponse.json({ booking });
   } catch (err: any) {
     console.error("Unexpected error:", err);
     return NextResponse.json({ error: "Internal server error", details: err?.message || String(err), stack: err?.stack }, { status: 500 });

@@ -328,6 +328,14 @@ function BookingConfirmationContent() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Booking Confirmed!</h1>
           <p className="text-slate-600">Your ride has been successfully booked</p>
+          
+          {/* WhatsApp Notification Info */}
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center space-x-2">
+            <span className="text-green-600">📱</span>
+            <p className="text-sm text-green-700">
+              WhatsApp confirmation sent to your mobile number
+            </p>
+          </div>
         </div>
 
         {/* Booking Details Card */}

@@ -102,7 +102,7 @@ export default function Footer() {
                 { label: "About Us", href: "#futures" },
                 { label: "Blog", href: "#" },
                 { label: "Contact Us", href: "tel:+919880691116" },
-                { label: "Privacy Policy", href: "#" },
+                { label: "Privacy Policy", href: "/privacy" },
                 { label: "Terms & Conditions", href: "#" },
               ].map((item) => (
                 <li key={item.label}>
@@ -137,7 +137,7 @@ export default function Footer() {
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
               <Link href="#" className="hover:text-white transition-colors">Blog</Link>
               <Link href="tel:+919880691116" className="hover:text-white transition-colors">Contact us</Link>
-              <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="#" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
             </div>
           </div>

@@ -57,6 +57,7 @@ export default function BookingPage() {
   const [terminal, setTerminal] = useState<"terminal1" | "terminal2">("terminal1");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [pickupText, setPickupText] = useState("");
   const [dropoffText, setDropoffText] = useState("Kempegowda International Airport, Bangalore");
   
@@ -90,6 +91,7 @@ export default function BookingPage() {
   const [errors, setErrors] = useState<{
     customerName?: string;
     customerEmail?: string;
+    customerPhone?: string;
     pickupLocation?: string;
     dropoffLocation?: string;
     addressLine1?: string;
@@ -418,6 +420,12 @@ export default function BookingPage() {
       newErrors.customerEmail = "Please enter a valid email address";
     }
 
+    if (!customerPhone.trim()) {
+      newErrors.customerPhone = "Please enter your phone number";
+    } else if (!/^\+?[\d\s-]{10,}$/.test(customerPhone)) {
+      newErrors.customerPhone = "Please enter a valid phone number";
+    }
+
     if (!pickupDate) {
       newErrors.pickupDate = "Please select a pickup date";
     }
@@ -494,6 +502,7 @@ export default function BookingPage() {
         body: JSON.stringify({
           customer_name: customerName,
           customer_email: customerEmail,
+          customer_phone: customerPhone,
           trip_type: tripType,
           terminal: terminal,
           pickup_location: finalPickupLocation,
@@ -613,6 +622,28 @@ export default function BookingPage() {
                     <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm">error</span>
                       {errors.customerEmail}
+                    </p>
+                  )}
+                </div>
+                <div className="group relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">call</span>
+                  <input
+                    type="tel"
+                    placeholder="Your Phone Number (e.g. +919876543210)"
+                    className={`input-field ${errors.customerPhone ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
+                    value={customerPhone}
+                    onChange={(e) => {
+                      setCustomerPhone(e.target.value);
+                      if (errors.customerPhone) {
+                        setErrors(prev => ({ ...prev, customerPhone: undefined }));
+                      }
+                    }}
+                    required
+                  />
+                  {errors.customerPhone && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {errors.customerPhone}
                     </p>
                   )}
                 </div>

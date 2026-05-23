@@ -134,6 +134,9 @@ export default function RootLayout({
         {children}
         <FloatingContactButtons />
       </body>
+
     </html>
-  );
+
+);
+
 }
