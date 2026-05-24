@@ -177,15 +177,15 @@ export default function LandingPage() {
           {/* Main headline */}
           <div className="px-4 sm:px-10 lg:px-20 max-w-5xl">
             <p className="text-white/70 text-xs sm:text-base font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-2 sm:mb-3 drop-shadow">
-              Bangalore Airport Taxi
+              airlinecabz - Nearest Airport Taxi
             </p>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.08] tracking-tight drop-shadow-2xl">
-              Bangalore's #1<br />
-              <span className="text-amber-300">Airport Taxi</span><br />
-              Pick Up From Anywhere
+              Nearest Cab<br />
+              <span className="text-amber-300">Near You</span><br />
+              24/7 Airport Taxi
             </h1>
             <p className="mt-3 sm:mt-4 text-white/80 text-xs sm:text-base max-w-md leading-relaxed drop-shadow">
-              Safe, professional, and on time — starting at just ₹799.
+              Book nearest airport taxi in Bangalore — safe, professional, and on time. Starting at just ₹799.
             </p>
             <a
               href="#booking-panel"
@@ -392,10 +392,10 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-14">
               <h2 className="font-headline text-4xl md:text-5xl font-bold tracking-tight mb-4 text-brandDark">
-                Why Book With AirlinCabz?
+                Why Book With airlinecabz?
               </h2>
               <p className="text-slate-500 max-w-2xl mx-auto">
-                India&apos;s most trusted taxi service. Safe, secured, and reliable rides across Bangalore.
+                Nearest and most trusted taxi service in Bangalore. Safe, secured, and reliable rides across all Bangalore areas.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -497,13 +497,13 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="font-headline text-4xl font-bold tracking-tight mb-6 text-brandDark">
-                  India&apos;s Most Trusted Taxi Services
+                  Nearest Airport Taxi Service in Bangalore
                 </h2>
                 <p className="text-slate-500 leading-relaxed mb-4">
-                  AirlinCabz is a leading cab service provider in Bangalore. Whether you are travelling to the airport late at night or going on a vacation with your family, AirlinCabz will be at your service.
+                  Airlinecabz is the nearest and most trusted cab service provider in Bangalore. Whether you need an airport taxi late at night or a cab for a family vacation, Airlinecabz is always near you with 24/7 service.
                 </p>
                 <p className="text-slate-500 leading-relaxed mb-6">
-                  We have a wide range of A/C and Non-A/C luxury tourist cabs for personal and corporate use. We provide cabs on rent for travelling in &amp; around Bangalore and Outstation Cabs Service from Bangalore.
+                  We have a wide range of A/C and Non-A/C luxury cabs available near you for personal and corporate use. Book nearest airport taxi, outstation cabs, and local taxi services from airlinecabz.
                 </p>
                 <div className="flex flex-col gap-3">
                   {[
@@ -556,10 +556,10 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-96 h-96 bg-brandBlue/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
               <div className="relative z-10">
                 <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-white mb-4">
-                  Book Airport Taxi Now
+                  Book Nearest Airport Taxi Now
                 </h2>
                 <p className="text-white/60 mb-10 max-w-xl mx-auto">
-                  Bangalore&apos;s cheapest airport taxi service. Innova Crysta starting at ₹1,999. Call us anytime!
+                  Nearest airport taxi service in Bangalore. Innova Crysta starting at ₹1,999. Available 24/7 near you!
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <a
@@ -578,6 +578,64 @@ export default function LandingPage() {
                   </Link>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ FAQ SECTION FOR SEO ═══ */}
+        <section className="py-20 bg-white/60">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="font-headline text-4xl font-bold tracking-tight mb-4 text-brandDark">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-slate-500">
+                Everything you need to know about Airlinecabz airport taxi service
+              </p>
+            </div>
+            <div className="space-y-4">
+              {[
+                {
+                  q: "How can I book the nearest airport taxi in Bangalore?",
+                  a: "You can book the nearest airport taxi by calling +91 98806 91116 or booking online through our website. Airlinecabz provides 24/7 airport taxi service across all Bangalore areas including Koramangala, Whitefield, MG Road, Marathahalli, and more."
+                },
+                {
+                  q: "What is the fare for airport taxi from Bangalore?",
+                  a: "Airport taxi fares start from ₹799 for hatchback, ₹899 for Swift Dzire, ₹1,799 for Innova, and ₹1,999 for Innova Crysta. Toll charges (₹120-250) are extra. We offer transparent pricing with no hidden charges."
+                },
+                {
+                  q: "Is Airlinecabz available 24/7 for airport pickup?",
+                  a: "Yes, Airlinecabz provides 24/7 airport taxi service in Bangalore. Whether you need an early morning pickup or late night airport drop, we are always available near you."
+                },
+                {
+                  q: "Which areas in Bangalore do you serve for airport taxi?",
+                  a: "We serve all major areas in Bangalore including MG Road, Koramangala, Whitefield, Marathahalli, Indira Nagar, Silk Board, JP Nagar, HAL, Yeshwanthpur, Banashankari, and many more. We are the nearest cab service provider across Bangalore."
+                },
+                {
+                  q: "Do you provide outstation cab service from Bangalore?",
+                  a: "Yes, Airlinecabz provides outstation cab service from Bangalore to popular destinations like Ooty, Mysore, Coorg, Chikmagalur, Goa, Tirupati, Wayanad, and Chennai. Rates start from ₹12/km."
+                },
+                {
+                  q: "What types of vehicles are available for airport taxi?",
+                  a: "We have a wide range of vehicles including Hatchback, Swift Dzire, Toyota Etios, Ertiga SUV, Toyota Innova, Innova Crysta, Innova Hycross, Tempo Traveller, and Force Urbania for group travel."
+                },
+                {
+                  q: "How do I find the nearest cab near me in Bangalore?",
+                  a: "Simply call +91 98806 91116 or book online at Airlinecabz.com. We have cabs available near you across all Bangalore locations with quick response time."
+                },
+                {
+                  q: "Is Airlinecabz reliable for airport transfers?",
+                  a: "Yes, Airlinecabz has served 50,000+ happy customers with a 4.9 rating and ultra-low cancellation rate. We are known for being on time, safe, and reliable for all airport transfers."
+                }
+              ].map((faq, idx) => (
+                <details key={idx} className="bg-white rounded-2xl border border-slate-200 p-6 group">
+                  <summary className="font-bold text-brandDark cursor-pointer list-none flex items-center justify-between">
+                    <span>{faq.q}</span>
+                    <span className="material-symbols-outlined text-brandBlue group-open:rotate-180 transition-transform">expand_more</span>
+                  </summary>
+                  <p className="mt-4 text-slate-600 text-sm leading-relaxed">{faq.a}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>

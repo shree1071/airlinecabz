@@ -33,6 +33,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Security - Never commit credentials
+CREDENTIALS.txt
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
+
 # vercel
 .vercel
 

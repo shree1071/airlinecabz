@@ -14,8 +14,8 @@ type Booking = {
   dropoff_location: string;
   pickup_date: string;
   vehicle_type: string;
-  base_fare: number;
-  total_amount: number;
+  base_fare: number | string;
+  total_amount: number | string;
   created_at: string;
   distance_km?: number;
   duration_minutes?: number;
@@ -65,7 +65,7 @@ function BookingConfirmationContent() {
   const generatePDF = () => {
     if (!booking) return;
 
-    const whatsappMessage = `*AirlinCabz Booking Confirmation*%0A%0A` +
+    const whatsappMessage = `*Airlinecabz Booking Confirmation*%0A%0A` +
       `Booking ID: ${booking.id}%0A` +
       `Customer: ${booking.customer_name}%0A` +
       `Email: ${booking.customer_email}%0A` +
@@ -75,7 +75,7 @@ function BookingConfirmationContent() {
       `Date: ${new Date(booking.pickup_date).toLocaleString()}%0A` +
       `Vehicle: ${booking.vehicle_type}%0A` +
       (booking.distance_km ? `Distance: ${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}%0A` : '') +
-      `Amount: ₹${booking.total_amount}%0A%0A` +
+      `Amount: ₹${Number(booking.total_amount)}%0A%0A` +
       `*Additional charges may apply (toll, parking)`;
 
     // Redirect to WhatsApp
@@ -104,7 +104,7 @@ function BookingConfirmationContent() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(32);
     doc.setFont('helvetica', 'bold');
-    doc.text('AIRLINCABZ', pageWidth / 2, 22, { align: 'center' });
+    doc.text('AIRLINECABZ', pageWidth / 2, 22, { align: 'center' });
     
     // Tagline
     doc.setFontSize(11);
@@ -246,7 +246,7 @@ function BookingConfirmationContent() {
     doc.setFont('helvetica', 'normal');
     doc.text('Base Fare:', margin + 5, yPos + 19);
     doc.setFont('helvetica', 'bold');
-    doc.text('Rs ' + Math.round(booking.base_fare).toString(), pageWidth - margin - 5, yPos + 19, { align: 'right' });
+    doc.text('Rs ' + Math.round(Number(booking.base_fare)).toString(), pageWidth - margin - 5, yPos + 19, { align: 'right' });
     
     // Divider line
     doc.setDrawColor(255, 255, 255);
@@ -257,7 +257,7 @@ function BookingConfirmationContent() {
     doc.setFont('helvetica', 'bold');
     doc.text('TOTAL AMOUNT:', margin + 5, yPos + 30);
     doc.setFontSize(14);
-    doc.text('Rs ' + Math.round(booking.total_amount).toString(), pageWidth - margin - 5, yPos + 30, { align: 'right' });
+    doc.text('Rs ' + Math.round(Number(booking.total_amount)).toString(), pageWidth - margin - 5, yPos + 30, { align: 'right' });
     
     yPos += 42;
     
@@ -296,13 +296,13 @@ function BookingConfirmationContent() {
     // Footer text
     doc.setFontSize(8);
     doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.text('Thank you for choosing AirlinCabz!', pageWidth / 2, yPos, { align: 'center' });
+    doc.text('Thank you for choosing Airlinecabz!', pageWidth / 2, yPos, { align: 'center' });
     doc.setFontSize(7);
     doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, pageWidth / 2, yPos + 4, { align: 'center' });
     doc.text('www.airlincabz.com', pageWidth / 2, yPos + 8, { align: 'center' });
     
     // Save the PDF
-    doc.save(`AirlinCabz-Booking-${booking.id.slice(0, 8)}.pdf`);
+    doc.save(`Airlinecabz-Booking-${booking.id.slice(0, 8)}.pdf`);
   };
 
   if (loading) {
@@ -406,12 +406,12 @@ function BookingConfirmationContent() {
             <div className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-bold text-slate-700">Base Fare</span>
-                <span className="text-lg font-bold text-slate-900">₹{booking.base_fare.toFixed(2)}</span>
+                <span className="text-lg font-bold text-slate-900">₹{Number(booking.base_fare).toFixed(2)}</span>
               </div>
               <div className="border-t border-blue-200 pt-2 mt-2">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-bold text-slate-900">Total Amount</span>
-                  <span className="text-2xl font-extrabold text-blue-600">₹{booking.total_amount.toFixed(2)}</span>
+                  <span className="text-2xl font-extrabold text-blue-600">₹{Number(booking.total_amount).toFixed(2)}</span>
                 </div>
               </div>
               <p className="text-xs text-slate-600 mt-2">*Additional charges may apply (toll, parking)</p>

@@ -16,17 +16,17 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <Image
                 src="/logo.png"
-                alt="AirlinCabz Logo"
+                alt="Airlinecabz Logo"
                 width={40}
                 height={40}
                 className="object-contain"
               />
               <span className="font-headline font-extrabold text-white text-2xl tracking-tighter">
-                AirlinCabz
+                Airlinecabz
               </span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-              India&apos;s most trusted taxi service in Bangalore. Safe, secured &amp; reliable airport, outstation, and local cab services.
+              Nearest airport taxi service in Bangalore. Safe, secured & reliable 24/7 airport, outstation, and local cab services. Book cabs near you instantly.
             </p>
 
             {/* Contact */}
@@ -131,7 +131,7 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white/40 text-xs">
             <p>
-              Copyright AirlinCabz | All Rights Reserved {currentYear} | Innova Airport Taxi services, Innova Car Rental, Airport Taxi Booking, Outstation Taxi Booking, Local Hire Taxi
+              Copyright airlinecabz | All Rights Reserved {currentYear} | Nearest Airport Taxi Bangalore | Innova Airport Taxi Services | Airport Cab Booking | Outstation Taxi Booking | Local Hire Taxi | Cab Near Me
             </p>
             <div className="flex gap-6">
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
@@ -144,7 +144,7 @@ export default function Footer() {
 
           {/* SEO Keywords */}
           <p className="mt-4 text-white/20 text-[10px] leading-relaxed">
-            Airport Taxi Bangalore | Cheapest Airport Taxi In Bangalore | Airport Taxi Near Me | Airport Transfer | Bengaluru Airport Taxi | Airport Cabs | SUV Airport Taxi In Bangalore | Innova Airport Taxi In Bangalore | Outstation Cabs | Bangalore Airport Cabs | Taxi In Bangalore Airport | Book Airport Taxi In Bangalore
+            Nearest Airport Taxi Bangalore | Airport Cab Near Me | Taxi Near Me Bangalore | Cheapest Airport Taxi In Bangalore | Airport Transfer Bangalore | Bengaluru Airport Taxi | Airport Cabs Near Me | SUV Airport Taxi | Innova Airport Taxi | Outstation Cabs Bangalore | Bangalore Airport Cabs | Taxi In Bangalore Airport | Book Airport Taxi Bangalore | Cab Booking Bangalore | airlinecabz | Airlin Cabz
           </p>
         </div>
 

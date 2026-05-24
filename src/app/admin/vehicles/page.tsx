@@ -8,8 +8,8 @@ type Vehicle = {
   id: string;
   name: string;
   slug: string;
-  base_fare: number;
-  per_km_rate: number;
+  base_fare: number | string;
+  per_km_rate: number | string;
   image_url: string;
   is_ev: boolean;
   is_active: boolean;
@@ -550,14 +550,14 @@ export default function VehicleManagementPage() {
                         <span className="material-symbols-outlined text-[16px]">payments</span>
                         Base Fare
                       </span>
-                      <span className="font-bold text-green-700">₹{vehicle.base_fare}</span>
+                      <span className="font-bold text-green-700">₹{Number(vehicle.base_fare) || 0}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm bg-blue-50 px-3 py-2 rounded-lg">
                       <span className="text-blue-700 flex items-center gap-1">
                         <span className="material-symbols-outlined text-[16px]">route</span>
                         Per KM
                       </span>
-                      <span className="font-bold text-blue-700">₹{vehicle.per_km_rate}</span>
+                      <span className="font-bold text-blue-700">₹{Number(vehicle.per_km_rate) || 0}</span>
                     </div>
                   </div>
 

@@ -41,14 +41,18 @@ export async function sendWhatsAppNotification(phoneNumber: string, booking: Boo
   // Format phone number (remove any non-digits and ensure it starts with country code)
   const formattedPhone = formatPhoneNumber(phoneNumber);
   
-  // Format pickup date
-  const pickupDate = new Date(booking.pickup_date).toLocaleDateString('en-IN', {
+  // Format pickup date and time separately
+  const pickupDateTime = new Date(booking.pickup_date);
+  const pickupDate = pickupDateTime.toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
+  });
+  const pickupTime = pickupDateTime.toLocaleTimeString('en-IN', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: true
   });
 
   // Create template message
@@ -87,6 +91,10 @@ export async function sendWhatsAppNotification(phoneNumber: string, booking: Boo
             },
             {
               type: "text",
+              text: pickupTime
+            },
+            {
+              type: "text",
               text: booking.vehicle_type
             },
             {
@@ -102,7 +110,7 @@ export async function sendWhatsAppNotification(phoneNumber: string, booking: Boo
   try {
     console.log(`Sending WhatsApp notification to ${formattedPhone} for booking ${booking.id}`);
     
-    const response = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -135,30 +143,36 @@ export async function sendWhatsAppNotification(phoneNumber: string, booking: Boo
 
 // Fallback function to send simple text message if template fails
 async function sendBookingConfirmationText(phoneNumber: string, booking: BookingData) {
-  const pickupDate = new Date(booking.pickup_date).toLocaleDateString('en-IN', {
+  const pickupDateTime = new Date(booking.pickup_date);
+  const pickupDate = pickupDateTime.toLocaleDateString('en-IN', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
+  });
+  const pickupTime = pickupDateTime.toLocaleTimeString('en-IN', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: true
   });
 
-  const message = `Hello ${booking.customer_name},
+  const message = `Booking Confirmed
 
-Your booking has been confirmed! 🚗
+Hello ${booking.customer_name},
 
-📋 Booking Details:
-• Booking ID: ${booking.id}
-• From: ${booking.pickup_location}
-• To: ${booking.dropoff_location}
-• Date & Time: ${pickupDate}
-• Vehicle: ${booking.vehicle_type}
-• Total Amount: ₹${booking.total_amount}
+Your booking has been confirmed.
 
-We'll contact you 30 minutes before pickup. Have a safe journey!
+Booking ID: ${booking.id}
+From: ${booking.pickup_location}
+To: ${booking.dropoff_location}
+Date: ${pickupDate}
+Time: ${pickupTime}
+Vehicle: ${booking.vehicle_type}
+Total Amount: ₹${booking.total_amount}
 
-- AirlinCabz Team`;
+We will contact you 30 minutes before pickup. Have a safe journey.
+
+Thank you for choosing Airlinecabz.`;
 
   return await sendSimpleWhatsAppMessage(phoneNumber, message);
 }
@@ -206,7 +220,7 @@ export async function sendSimpleWhatsAppMessage(phoneNumber: string, message: st
   };
 
   try {
-    const response = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,

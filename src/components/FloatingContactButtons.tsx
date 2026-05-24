@@ -7,7 +7,7 @@ export default function FloatingContactButtons() {
 
   const phoneNumber = "+919880691116";
   const whatsappNumber = "919880691116";
-  const whatsappMessage = "Hello! I want to book a cab with AirlinCabz.";
+  const whatsappMessage = "Hello! I want to book a cab with airlinecabz.";
 
   return (
     <>

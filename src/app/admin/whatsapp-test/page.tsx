@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export default function WhatsAppTestPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [message, setMessage] = useState('Hello! This is a test message from AirlinCabz.');
+  const [message, setMessage] = useState('Hello! This is a test message from airlinecabz.');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -106,12 +106,21 @@ export default function WhatsAppTestPage() {
                 <ul className="ml-4 mt-1 space-y-1 list-disc list-inside">
                   <li>WHATSAPP_ACCESS_TOKEN</li>
                   <li>WHATSAPP_PHONE_NUMBER_ID</li>
-                  <li>WHATSAPP_BUSINESS_ACCOUNT_ID</li>
                 </ul>
               </li>
-              <li>Create a message template in Meta Business Manager for booking confirmations</li>
-              <li>Test the integration using this panel</li>
+              <li>Add test phone numbers in Meta Business Manager (API Setup → Manage phone number list)</li>
+              <li>Verify the test number by entering the code sent via WhatsApp</li>
+              <li>Test using the verified number (e.g., +15556393449)</li>
             </ol>
+          </div>
+
+          <div className="mt-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
+            <h3 className="font-medium text-yellow-900 mb-2">⚠️ Common Issues:</h3>
+            <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+              <li><strong>Error 133010 (Account not registered):</strong> Add the recipient number to your test list in Meta Business Manager</li>
+              <li><strong>Error 100 (Missing permissions):</strong> Make sure your access token and phone number ID are from the same WhatsApp Business Account</li>
+              <li><strong>During development:</strong> You can only send messages to pre-approved test numbers</li>
+            </ul>
           </div>
         </div>
       </div>

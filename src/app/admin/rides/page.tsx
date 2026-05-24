@@ -240,6 +240,20 @@ export default function ActiveRidesPage() {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {/* WhatsApp Button */}
+                    <a
+                      href={`https://wa.me/${ride.customer_phone?.replace(/\D/g, '')}?text=${encodeURIComponent(
+                        `Hello ${ride.customer_name},\n\nYour booking has been confirmed.\n\nBooking ID: ${ride.booking_id}\nFrom: ${ride.pickup_location}\nTo: ${ride.dropoff_location}\nDate: ${new Date(ride.pickup_date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\nTime: ${new Date(ride.pickup_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}\nVehicle: ${ride.vehicle_type}\nTotal Amount: ₹${ride.total_amount}\n\nWe will contact you 30 minutes before pickup. Have a safe journey.\n\nThank you for choosing Airlinecabz.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm"
+                      title="Send WhatsApp confirmation"
+                    >
+                      <span className="text-lg">💬</span>
+                      WhatsApp
+                    </a>
+                    
                     <select
                       value={ride.ride_status}
                       onChange={(e) => updateRideStatus(ride.id, e.target.value)}

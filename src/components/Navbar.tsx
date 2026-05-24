@@ -33,13 +33,13 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.png"
-            alt="AirlinCabz Logo"
+            alt="Airlinecabz Logo"
             width={40}
             height={40}
             className="object-contain"
           />
           <span className={`text-2xl font-black italic tracking-tighter font-headline transition-colors ${scrolled ? "text-brandDark" : "text-white"}`}>
-            AirlinCabz
+            Airlinecabz
           </span>
         </Link>
 

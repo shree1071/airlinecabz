@@ -10,6 +10,7 @@ import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
 import dayjs, { Dayjs } from 'dayjs';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Vehicle, toNumber } from '@/types';
 
 // Dynamically import LocationMap to avoid SSR issues
 const LocationMap = dynamic(() => import('@/components/LocationMap'), { ssr: false });
@@ -34,16 +35,6 @@ const theme = createTheme({
     },
   },
 });
-
-type Vehicle = {
-  id: string;
-  name: string;
-  slug: string;
-  base_fare: number;
-  per_km_rate: number;
-  image_url: string;
-  is_ev: boolean;
-};
 
 export default function BookingPage() {
   const router = useRouter();
@@ -349,7 +340,7 @@ export default function BookingPage() {
     setPincode("");
   }, [tripType, terminal]);
 
-  const baseFare = selectedVehicle?.base_fare || 0;
+  const baseFare = selectedVehicle ? toNumber(selectedVehicle.base_fare) : 0;
   const totalAmount = baseFare; // No taxes, just base fare
 
   // Fetch vehicles from API
@@ -363,8 +354,17 @@ export default function BookingPage() {
       .then((data) => {
         console.log("Vehicles data:", data);
         if (data.vehicles) {
-          setVehicles(data.vehicles);
-          console.log("Set vehicles:", data.vehicles.length);
+          // Filter only airport vehicles (exclude outstation and local)
+          const airportVehicles = data.vehicles.filter((v: Vehicle) => 
+            v.vehicle_category === 'airport' || !v.vehicle_category
+          );
+          console.log("Filtered airport vehicles:", airportVehicles.length);
+          console.log("First vehicle:", airportVehicles[0]);
+          console.log("First vehicle base_fare type:", typeof airportVehicles[0]?.base_fare);
+          console.log("First vehicle base_fare value:", airportVehicles[0]?.base_fare);
+          console.log("Converted to number:", Number(airportVehicles[0]?.base_fare));
+          setVehicles(airportVehicles);
+          console.log("Set vehicles:", airportVehicles.length);
         } else {
           console.error("No vehicles in response:", data);
         }
@@ -559,10 +559,10 @@ export default function BookingPage() {
             <h1 className="font-headline font-bold text-base md:text-xl tracking-tighter text-primary">Book Your Ride</h1>
           </div>
           <div className="flex items-center gap-1 md:gap-2">
-            <span className="text-[9px] md:text-xs font-semibold uppercase tracking-widest text-outline">AirlinCabz</span>
+            <span className="text-[9px] md:text-xs font-semibold uppercase tracking-widest text-outline">Airlinecabz</span>
             <Image
               src="/logo.png"
-              alt="AirlinCabz"
+              alt="Airlinecabz"
               width={24}
               height={24}
               className="object-contain"
@@ -1169,7 +1169,7 @@ export default function BookingPage() {
                           {v.name}
                         </span>
                         <span className={`text-[9px] md:text-[10px] block mt-0.5 ${selectedVehicle?.id === v.id ? "text-primary/70" : "text-slate-500"}`}>
-                          ₹{v.base_fare}
+                          ₹{toNumber(v.base_fare)}
                         </span>
                       </div>
                     </button>

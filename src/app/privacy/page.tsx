@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Welcome to AirlinCabz ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.
+                Welcome to Airlinecabz ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.
               </p>
               <p className="text-gray-700 leading-relaxed">
                 By using our services, you agree to the collection and use of information in accordance with this policy.
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
                 If you have any questions about this Privacy Policy or our privacy practices, please contact us:
               </p>
               <div className="bg-gray-50 p-6 rounded-lg">
-                <p className="text-gray-700 mb-2"><strong>AirlinCabz</strong></p>
+                <p className="text-gray-700 mb-2"><strong>Airlinecabz</strong></p>
                 <p className="text-gray-700 mb-2">Email: help@airlincabz.com</p>
                 <p className="text-gray-700 mb-2">Phone: +91 98806 91116</p>
                 <p className="text-gray-700">Bangalore, India</p>
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
 
           <div className="mt-12 pt-8 border-t border-gray-200 text-center">
             <p className="text-gray-600">
-              By using AirlinCabz services, you acknowledge that you have read and understood this Privacy Policy.
+              By using Airlinecabz services, you acknowledge that you have read and understood this Privacy Policy.
             </p>
           </div>
         </div>
