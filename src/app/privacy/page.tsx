@@ -1,6 +1,4 @@
-import React from 'react';
-
-export default function PrivacyPolicyPage() {
+export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
@@ -105,79 +103,16 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Data Retention</h2>
-              <p className="text-gray-700 leading-relaxed">
-                We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, comply with legal obligations, resolve disputes, and enforce our agreements. Booking records are typically retained for 7 years for tax and legal compliance purposes.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Your Rights</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                You have the following rights regarding your personal information:
-              </p>
-              <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-                <li><strong>Access:</strong> Request access to your personal information</li>
-                <li><strong>Correction:</strong> Request correction of inaccurate information</li>
-                <li><strong>Deletion:</strong> Request deletion of your personal information</li>
-                <li><strong>Portability:</strong> Request transfer of your data to another service</li>
-                <li><strong>Objection:</strong> Object to processing of your personal information</li>
-                <li><strong>Withdrawal:</strong> Withdraw consent for marketing communications</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed">
-                To exercise these rights, please contact us using the information provided below.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Cookies and Tracking Technologies</h2>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We use cookies and similar tracking technologies to enhance your browsing experience, analyze website traffic, and understand user preferences. You can control cookie settings through your browser preferences.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                We use Google Maps API for location services, which is subject to Google's Privacy Policy.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Third-Party Links</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Our website may contain links to third-party websites. We are not responsible for the privacy practices or content of these external sites. We encourage you to review the privacy policies of any third-party websites you visit.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Children's Privacy</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Our services are not intended for children under the age of 18. We do not knowingly collect personal information from children under 18. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Changes to This Privacy Policy</h2>
-              <p className="text-gray-700 leading-relaxed">
-                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date. We encourage you to review this Privacy Policy periodically for any changes.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Contact Information</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 If you have any questions about this Privacy Policy or our privacy practices, please contact us:
               </p>
               <div className="bg-gray-50 p-6 rounded-lg">
                 <p className="text-gray-700 mb-2"><strong>AirlinCabz</strong></p>
-                <p className="text-gray-700 mb-2">Email: privacy@airlincabz.com</p>
-                <p className="text-gray-700 mb-2">Phone: +91-XXXXXXXXXX</p>
-                <p className="text-gray-700">Address: [Your Business Address]</p>
+                <p className="text-gray-700 mb-2">Email: help@airlincabz.com</p>
+                <p className="text-gray-700 mb-2">Phone: +91 98806 91116</p>
+                <p className="text-gray-700">Bangalore, India</p>
               </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Governing Law</h2>
-              <p className="text-gray-700 leading-relaxed">
-                This Privacy Policy is governed by and construed in accordance with the laws of India. Any disputes arising under this policy shall be subject to the exclusive jurisdiction of the courts in [Your City], India.
-              </p>
             </section>
           </div>
 
