@@ -13,6 +13,7 @@ const tabs: Array<{
   href?: string;
   sectionId?: string;
   isCall?: boolean;
+  tabId?: string;
 }> = [
   { id: "home", icon: "home", label: "Home", href: "/" },
   { id: "airport", icon: "flight_takeoff", label: "Airport", tabId: "airport" },
