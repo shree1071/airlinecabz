@@ -147,12 +147,19 @@ export async function POST(req: Request) {
     logger.logDataAccess('customer', 'bookings', 'create', ip);
     logRequest(req, 200);
 
-    // Try sending WhatsApp notification (non-blocking)
+    // Try sending WhatsApp alert to admin (non-blocking)
     try {
-      const { sendWhatsAppNotification } = await import("@/lib/whatsapp");
-      await sendWhatsAppNotification(booking.customer_phone, booking);
+      const { sendWhatsAppBookingAlert } = await import("@/lib/whatsapp");
+      await sendWhatsAppBookingAlert({
+        id: booking.id,
+        pickup_location: booking.pickup_location,
+        dropoff_location: booking.dropoff_location,
+        pickup_date: booking.pickup_date,
+        vehicle_type: booking.vehicle_type,
+        total_amount: booking.total_amount,
+      });
     } catch (waError) {
-      logger.logError("Failed to send WhatsApp notification", waError);
+      logger.logError("Failed to send WhatsApp admin alert", waError);
       // Don't fail the booking if notification fails
     }
 
