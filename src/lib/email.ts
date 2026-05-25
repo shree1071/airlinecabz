@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 interface BookingEmailData {
   id: string;
@@ -284,34 +284,27 @@ export function buildBookingEmailHTML(booking: BookingEmailData): string {
 export async function sendBookingNotificationEmail(
   booking: BookingEmailData
 ): Promise<void> {
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailPass = process.env.GMAIL_APP_PASSWORD;
+  const apiKey = process.env.RESEND_API_KEY;
 
-  if (!gmailUser || !gmailPass) {
-    console.warn(
-      "[Email] GMAIL_USER or GMAIL_APP_PASSWORD not set — skipping email notification."
-    );
+  if (!apiKey) {
+    console.warn("[Email] RESEND_API_KEY not set — skipping email notification.");
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: gmailUser,
-      pass: gmailPass,
-    },
-  });
-
+  const resend = new Resend(apiKey);
   const html = buildBookingEmailHTML(booking);
 
-  await transporter.sendMail({
-    from: `"Airlinecabz Bookings" <${gmailUser}>`,
-    to: "airlinecabz@gmail.com",
+  const { data, error } = await resend.emails.send({
+    from: "Airlinecabz Bookings <onboarding@resend.dev>",
+    to: ["airlinecabz@gmail.com"],
     subject: `🚕 New Booking: ${booking.customer_name} → ${booking.vehicle_type} on ${new Date(booking.pickup_date).toLocaleDateString("en-IN")}`,
     html,
   });
 
-  console.log(
-    `[Email] Booking notification sent to airlinecabz@gmail.com for booking ${booking.id}`
-  );
+  if (error) {
+    console.error("[Email] Resend error:", error);
+    throw new Error(error.message);
+  }
+
+  console.log(`[Email] Booking notification sent! ID: ${data?.id}`);
 }
