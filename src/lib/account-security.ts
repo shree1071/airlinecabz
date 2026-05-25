@@ -1,6 +1,6 @@
 // Account Security - Lockout and MFA functionality
 
-import { logger } from './logger';
+import { logger } from '@/lib/logger';
 
 // Account lockout configuration
 const LOCKOUT_THRESHOLD = 5; // Failed attempts before lockout

@@ -156,6 +156,15 @@ export async function POST(req: Request) {
       // Don't fail the booking if notification fails
     }
 
+    // Try sending email notification to admin (non-blocking)
+    try {
+      const { sendBookingNotificationEmail } = await import("@/lib/email");
+      await sendBookingNotificationEmail(booking);
+    } catch (emailError) {
+      logger.logError("Failed to send booking email notification", emailError);
+      // Don't fail the booking if email fails
+    }
+
     return NextResponse.json({ booking });
   } catch (err: any) {
     logger.logError("Unexpected error in POST /api/bookings", err);

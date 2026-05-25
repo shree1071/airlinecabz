@@ -5,14 +5,14 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-brandDark text-white w-full pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-6">
+    <footer className="bg-brandDark text-white w-full pt-10 sm:pt-16 pb-28 sm:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-12">
 
           {/* Brand */}
-          <div className="lg:col-span-1 flex flex-col gap-5">
+          <div className="col-span-2 md:col-span-2 lg:col-span-1 flex flex-col gap-4 sm:gap-5">
             <div className="flex items-center gap-2">
               <Image
                 src="/logo.png"
@@ -128,12 +128,12 @@ export default function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white/40 text-xs">
-            <p>
-              Copyright airlinecabz | All Rights Reserved {currentYear} | Nearest Airport Taxi Bangalore | Innova Airport Taxi Services | Airport Cab Booking | Outstation Taxi Booking | Local Hire Taxi | Cab Near Me
+        <div className="border-t border-white/10 pt-6 sm:pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-white/40 text-[10px] sm:text-xs">
+            <p className="text-center md:text-left">
+              Copyright airlinecabz | All Rights Reserved {currentYear} | Nearest Airport Taxi Bangalore | Airport Cab Booking | Outstation Taxi Booking
             </p>
-            <div className="flex gap-6">
+            <div className="hidden sm:flex gap-6">
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
               <Link href="#" className="hover:text-white transition-colors">Blog</Link>
               <Link href="tel:+919880691116" className="hover:text-white transition-colors">Contact us</Link>

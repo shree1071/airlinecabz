@@ -1,16 +1,8 @@
 import { generateWhatsAppLink } from "@/lib/whatsapp-helper";
+import { Booking } from "@/types";
 
 type WhatsAppButtonProps = {
-  booking: {
-    id: string;
-    customer_name: string;
-    customer_phone: string;
-    pickup_location: string;
-    dropoff_location: string;
-    pickup_date: string;
-    vehicle_type: string;
-    total_amount: number;
-  };
+  booking: Booking;
   variant?: "default" | "small" | "icon";
   className?: string;
 };

@@ -2,10 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 /* ── How It Works Steps ── */
 const steps = [
@@ -54,23 +66,32 @@ const localPrices = [
   { vehicle: "Innova Hycross", capacity: "7+1", price: 4499, hours: 8, km: 80, extraKm: 30, extraHr: 300, img: "/imgi_11_hycross.jpg" },
 ];
 
-/* ── Airport Service Areas ── */
+/* ── Airport Service Areas (curated popular routes) ── */
 const airportAreas = [
-  "MG Road", "Koramangala", "Bagmane Tech Park", "Banashankari", "Basavanagudi",
-  "Silk Board", "Frazer Town", "Indira Nagar", "Infantry Road", "Sanjay Nagar",
-  "JP Nagar", "KR Puram", "HAL", "Rajaji Nagar", "Marathahalli",
-  "Vijayanagar", "Yeshwanthpur", "Whitefield", "Shanti Nagar", "ITPL",
-  "National Games Village", "Kundalahalli", "Richmond Town", "Race Course Road",
-  "Hoodi", "Ashok Nagar", "Brookfield",
+  { area: "Koramangala", dist: "~55 km" },
+  { area: "Whitefield", dist: "~40 km" },
+  { area: "MG Road", dist: "~45 km" },
+  { area: "Marathahalli", dist: "~38 km" },
+  { area: "Indira Nagar", dist: "~42 km" },
+  { area: "JP Nagar", dist: "~60 km" },
+  { area: "Banashankari", dist: "~62 km" },
+  { area: "Yeshwanthpur", dist: "~35 km" },
+  { area: "Silk Board", dist: "~52 km" },
+  { area: "ITPL", dist: "~33 km" },
+  { area: "Rajaji Nagar", dist: "~40 km" },
+  { area: "KR Puram", dist: "~30 km" },
 ];
 
-/* ── Outstation Destinations ── */
+/* ── Outstation Destinations (curated top routes) ── */
 const outstationDestinations = [
-  "Ooty", "Nandi Hills", "Mysore", "BR Hills", "Yercaud",
-  "Chikmagalur", "Coorg", "Wayanad", "Sakleshpur", "Dandeli",
-  "Bheemeshwari", "Kudremukh", "Hampi", "Gokarna", "Udupi",
-  "Kodaikanal", "Goa", "Mangalore", "Dharmasthala", "Tirupati",
-  "Puducherry", "Chennai",
+  { dest: "Mysore", dist: "150 km", time: "~3 hrs" },
+  { dest: "Coorg", dist: "265 km", time: "~5 hrs" },
+  { dest: "Ooty", dist: "280 km", time: "~6 hrs" },
+  { dest: "Goa", dist: "560 km", time: "~9 hrs" },
+  { dest: "Nandi Hills", dist: "60 km", time: "~1.5 hrs" },
+  { dest: "Chikmagalur", dist: "245 km", time: "~5 hrs" },
+  { dest: "Hampi", dist: "340 km", time: "~6 hrs" },
+  { dest: "Tirupati", dist: "250 km", time: "~5 hrs" },
 ];
 
 /* ── Why Us features ── */
@@ -149,13 +170,40 @@ export default function LandingPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
+  // Handle hash on load and listen for tab switch events
+  useEffect(() => {
+    // Check initial hash
+    const hash = window.location.hash;
+    if (hash === "#outstation-pricing") setActiveTab("outstation");
+    else if (hash === "#local-pricing") setActiveTab("local");
+    else if (hash === "#airport-pricing") setActiveTab("airport");
+
+    // Listen for custom event to switch tabs from other components
+    const handleSwitchTab = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setActiveTab(customEvent.detail as Tab);
+      }
+    };
+    window.addEventListener("switchPricingTab", handleSwitchTab);
+    return () => window.removeEventListener("switchPricingTab", handleSwitchTab);
+  }, []);
+
+  // Sync tab changes to URL and notify other components
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("pricingTabChanged", { detail: activeTab }));
+    // Optionally update hash without scrolling
+    if (window.history.replaceState) {
+      window.history.replaceState(null, "", `#${activeTab}-pricing`);
+    }
+  }, [activeTab]);
+
   return (
     <>
       <Navbar />
 
       {/* ═══ FULL-BLEED HERO ═══ */}
-      <section className="relative w-full h-[92vh] min-h-[500px] sm:min-h-[600px] max-h-[900px] overflow-hidden">
-        {/* Airport terminal background */}
+      <section className="relative w-full min-h-[88svh] sm:min-h-[600px] sm:h-[100svh] sm:max-h-[900px] overflow-hidden">
         <Image
           src="/airport-terminal-hero.png"
           alt="Bangalore Airport Terminal"
@@ -163,104 +211,108 @@ export default function LandingPage() {
           className="object-cover object-[center_40%] sm:object-center"
           priority
           quality={90}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          sizes="(max-width: 768px) 100vw, 100vw"
         />
-        {/* Gradient overlays for cinematic effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/75 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/80 z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10" />
 
-        {/* Hero content */}
-        <div className="relative z-20 h-full flex flex-col justify-between pb-6 sm:pb-8">
-          {/* Top spacer for navbar */}
-          <div className="h-16 sm:h-24" />
-
-          {/* Main headline */}
-          <div className="px-4 sm:px-10 lg:px-20 max-w-5xl">
-            <p className="text-white/70 text-xs sm:text-base font-semibold tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-2 sm:mb-3 drop-shadow">
-              airlinecabz - Nearest Airport Taxi
+        {/* Hero content — vertically centered on mobile, bottom-aligned on desktop */}
+        <div className="relative z-20 h-full flex flex-col justify-center sm:justify-end sm:pb-20 pt-20 sm:pt-0">
+          <div className="px-5 sm:px-10 lg:px-20 max-w-5xl">
+            <p className="text-white/60 text-[11px] sm:text-sm font-semibold tracking-[0.15em] uppercase mb-2 sm:mb-3 drop-shadow">
+              airlinecabz — Nearest Airport Taxi
             </p>
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.1] sm:leading-[1.08] tracking-tight drop-shadow-2xl">
-              Nearest Cab<br />
-              <span className="text-amber-300">Near You</span><br />
-              24/7 Airport Taxi
+            <h1 className="text-[2.6rem] sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-2xl">
+              Nearest Cab
+              <br />
+              <span className="text-amber-300">Near You</span>
+              <br />
+              <span className="text-2xl sm:text-5xl lg:text-6xl">24/7 Airport Taxi</span>
             </h1>
-            <p className="mt-3 sm:mt-4 text-white/80 text-xs sm:text-base max-w-md leading-relaxed drop-shadow">
-              Book nearest airport taxi in Bangalore — safe, professional, and on time. Starting at just ₹799.
+            <p className="mt-3 sm:mt-4 text-white/75 text-sm sm:text-base max-w-md leading-relaxed drop-shadow">
+              Book nearest airport taxi in Bangalore — safe, on time.
+              <span className="font-bold text-amber-300"> Starting at ₹799.</span>
             </p>
-            <a
-              href="#booking-panel"
-              className="mt-4 sm:mt-6 inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all duration-300 hover:scale-105"
-            >
-              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">explore</span>
-              Explore Now
-            </a>
+            {/* CTA row — side by side on mobile too */}
+            <div className="mt-5 sm:mt-6 flex flex-row items-center gap-3">
+              <a
+                href="tel:+919880691116"
+                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold text-sm px-5 py-3.5 rounded-2xl transition-all shadow-lg shadow-green-500/40 active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">call</span>
+                Call Now
+              </a>
+              <a
+                href="#cars"
+                onClick={(e) => { e.preventDefault(); document.getElementById('cars')?.scrollIntoView({ behavior: 'smooth' }); }}
+                className="flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-bold text-sm px-5 py-3.5 rounded-2xl transition-all active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[18px]">explore</span>
+                View Prices
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div id="about" className="mt-6 sm:mt-10 bg-white/40 backdrop-blur-md rounded-2xl sm:rounded-[32px] border border-white/60 p-6 sm:p-8 py-8 sm:py-10 shadow-soft">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            <div className="flex flex-col items-center justify-center border-r border-slate-300">
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark">50k+</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 text-center">Happy Rides</span>
-            </div>
-            <div className="flex flex-col items-center justify-center md:border-r border-slate-300">
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark">10+</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 text-center">Years Experience</span>
-            </div>
-            <div className="flex flex-col items-center justify-center border-r border-slate-300">
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark">4.9</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 text-center">Average Rating</span>
-            </div>
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark">24/7</span>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 text-center">Support</span>
-            </div>
+      {/* Stats Bar — inline on mobile, floating card on sm+ */}
+      <div className="bg-white sm:bg-transparent sm:max-w-5xl sm:mx-auto sm:px-6 sm:relative sm:z-30 sm:-mt-14 sm:mb-14">
+        <div id="about" className="bg-white rounded-none sm:rounded-3xl px-5 py-4 sm:p-8 border-b border-slate-100 sm:border sm:border-slate-100/60 sm:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.12)]">
+          <div className="grid grid-cols-4 gap-1 sm:gap-6 relative">
+            {[
+              { value: "50k+", label: "Happy Rides" },
+              { value: "10+", label: "Yrs Exp." },
+              { value: "4.9★", label: "Rating" },
+              { value: "24/7", label: "Support" },
+            ].map((stat, i) => (
+              <div key={stat.label} className="flex flex-col items-center justify-center relative py-1">
+                <span className="text-[1.1rem] sm:text-3xl lg:text-4xl font-extrabold font-headline text-brandDark tracking-tight">{stat.value}</span>
+                <span className="text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-[0.1em] text-center mt-0.5">{stat.label}</span>
+                {i < 3 && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-6 sm:h-12 bg-slate-200 sm:bg-gradient-to-b sm:from-transparent sm:via-slate-200 sm:to-transparent" />}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <main className="pb-20">
+      <main className="pb-20 md:pb-0">
 
       {/* ───── Main Content ───── */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-t-[3rem] mt-12 pt-20 border-t border-white/90 shadow-[0_-20px_40px_rgba(0,0,0,0.02)]">
+      <div className="bg-slate-50/50 sm:rounded-t-[4rem] sm:border-t sm:border-white">
 
         {/* ═══ PRICING SECTION ═══ */}
         <section id="cars" className="py-12 sm:py-20 bg-transparent">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4 text-brandDark">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-6 sm:mb-10">
+              <span className="inline-block text-brandBlue bg-brandBlue/5 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">Our Fleet</span>
+              <h2 className="font-headline text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3 text-brandDark">
                 Transparent Pricing
               </h2>
-              <p className="text-slate-500 max-w-2xl mx-auto text-sm sm:text-base px-4">
-                Affordable taxi fares in Bangalore with no hidden charges. Toll charges extra as applicable.
+              <p className="text-slate-500 max-w-lg mx-auto text-sm">
+                No hidden charges. Toll extra as applicable.
               </p>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="flex justify-center mb-8 sm:mb-10 px-4">
-              <div className="inline-flex bg-slate-100 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 gap-1 w-full max-w-md sm:w-auto overflow-x-auto">
-                {(["airport", "outstation", "local"] as Tab[]).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm capitalize transition-all duration-300 whitespace-nowrap flex-1 sm:flex-none ${
-                      activeTab === tab ? "bg-brandBlue text-white shadow-brand" : "text-slate-500 hover:text-brandDark"
-                    }`}
-                  >
-                    {tab === "airport" ? "✈ Airport" : tab === "outstation" ? "🗺 Outstation" : "� Local"}
-                  </button>
-                ))}
+            {/* Shadcn Tabs Component */}
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as Tab)} className="w-full flex-col">
+              <div className="flex justify-center mb-8 sm:mb-12">
+                <TabsList className="bg-slate-100 rounded-2xl p-1.5 w-full max-w-md h-auto flex">
+                  <TabsTrigger value="airport" className="rounded-xl font-bold text-sm py-3 sm:py-3.5 flex-1 data-[active]:bg-white data-[active]:text-brandDark data-[active]:shadow-md">
+                    ✈️ Airport
+                  </TabsTrigger>
+                  <TabsTrigger value="outstation" className="rounded-xl font-bold text-sm py-3 sm:py-3.5 flex-1 data-[active]:bg-white data-[active]:text-brandDark data-[active]:shadow-md">
+                    🗺️ Outstation
+                  </TabsTrigger>
+                  <TabsTrigger value="local" className="rounded-xl font-bold text-sm py-3 sm:py-3.5 flex-1 data-[active]:bg-white data-[active]:text-brandDark data-[active]:shadow-md">
+                    🚕 Local
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </div>
 
-            {/* ── Airport Taxi Tab ── */}
-            {activeTab === "airport" && (
-              <div>
-                <p className="text-center text-slate-500 text-xs sm:text-sm mb-6 sm:mb-8 px-4">Airport Taxi pickup and drop with 24×7 customer support</p>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 sm:px-0">
+              {/* ── Airport Taxi Tab ── */}
+              <TabsContent value="airport" className="mt-0 outline-none animate-fade-in-up">
+                <p className="text-center text-slate-500 text-xs sm:text-sm mb-5 sm:mb-8">Airport Taxi pickup and drop with 24×7 customer support</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {airportPrices.map((item) => (
                     <div
                       key={item.vehicle}
@@ -291,14 +343,12 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              </TabsContent>
 
-            {/* ── Outstation Tab ── */}
-            {activeTab === "outstation" && (
-              <div>
-                <p className="text-center text-slate-500 text-xs sm:text-sm mb-6 sm:mb-8 px-4">Outstation taxi pickup and drop with 24×7 customer support. Toll and parking as applicable extra.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 sm:px-0">
+              {/* ── Outstation Tab ── */}
+              <TabsContent value="outstation" className="mt-0 outline-none animate-fade-in-up">
+                <p className="text-center text-slate-500 text-xs sm:text-sm mb-5 sm:mb-8">Outstation taxi pickup and drop with 24×7 customer support. Toll and parking as applicable extra.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {outstationPrices.map((item) => (
                     <div
                       key={item.vehicle}
@@ -329,14 +379,12 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              </TabsContent>
 
-            {/* ── Local Hire Tab ── */}
-            {activeTab === "local" && (
-              <div>
-                <p className="text-center text-slate-500 text-xs sm:text-sm mb-6 sm:mb-8 px-4">Local taxi pickup and drop with 24×7 customer support.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 px-4 sm:px-0">
+              {/* ── Local Hire Tab ── */}
+              <TabsContent value="local" className="mt-0 outline-none animate-fade-in-up">
+                <p className="text-center text-slate-500 text-xs sm:text-sm mb-5 sm:mb-8">Local taxi pickup and drop with 24×7 customer support.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {localPrices.map((item) => (
                     <div
                       key={item.vehicle}
@@ -370,17 +418,17 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              </TabsContent>
+            </Tabs>
 
             {/* CTA below pricing */}
-            <div className="mt-10 sm:mt-12 text-center px-4">
-              <p className="text-slate-500 text-xs sm:text-sm mb-3 sm:mb-4">📞 Call us for instant booking &amp; best rates</p>
+            <div className="mt-8 sm:mt-12 text-center">
+              <p className="text-slate-400 text-xs sm:text-sm mb-3">📞 Call for instant booking & best rates</p>
               <a
                 href="tel:+919880691116"
-                className="inline-flex items-center gap-2 sm:gap-3 bg-brandDark text-white px-6 sm:px-10 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:scale-105 transition-transform active:scale-95"
+                className="inline-flex items-center gap-2 bg-brandDark text-white px-8 py-4 rounded-2xl font-bold text-base shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all active:scale-95"
               >
-                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">call</span>
+                <span className="material-symbols-outlined text-[20px]">call</span>
                 +91 98806 91116
               </a>
             </div>
@@ -388,27 +436,28 @@ export default function LandingPage() {
         </section>
 
         {/* ═══ WHY BOOK WITH US ═══ */}
-        <section id="futures" className="py-20 bg-slate-50/50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-14">
-              <h2 className="font-headline text-4xl md:text-5xl font-bold tracking-tight mb-4 text-brandDark">
-                Why Book With airlinecabz?
+        <section id="futures" className="py-14 sm:py-20 bg-slate-50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="inline-block text-brandBlue bg-brandBlue/5 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">The Advantage</span>
+              <h2 className="font-headline text-2xl sm:text-4xl font-bold tracking-tight mb-2 text-brandDark">
+                Why Choose Us?
               </h2>
-              <p className="text-slate-500 max-w-2xl mx-auto">
-                Nearest and most trusted taxi service in Bangalore. Safe, secured, and reliable rides across all Bangalore areas.
+              <p className="text-slate-500 max-w-lg mx-auto text-sm">
+                Premium, secure, and reliable rides across Bangalore.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               {whyUs.map((item) => (
                 <div
                   key={item.title}
-                  className="bg-white p-8 rounded-3xl shadow-soft border border-slate-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group"
+                  className="bg-white rounded-2xl p-5 sm:p-6 text-center border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-0.5"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-brandBlue/10 flex items-center justify-center text-brandBlue mb-6 group-hover:bg-brandBlue group-hover:text-white transition-colors">
-                    <span className="material-symbols-outlined text-3xl">{item.icon}</span>
+                  <div className="w-12 h-12 mx-auto bg-brandBlue/5 group-hover:bg-brandBlue/10 text-brandBlue rounded-xl flex items-center justify-center mb-4 transition-colors">
+                    <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
                   </div>
-                  <h3 className="font-headline text-xl font-bold mb-3 text-brandDark">{item.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+                  <h3 className="font-bold text-sm sm:text-base mb-1.5 text-slate-800">{item.title}</h3>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -416,133 +465,170 @@ export default function LandingPage() {
         </section>
 
         {/* ═══ HOW IT WORKS ═══ */}
-        <section id="help" className="py-20 bg-transparent">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="mb-16">
-              <h2 className="font-headline text-3xl md:text-4xl font-bold tracking-tight mb-4 text-brandDark">
+        <section id="help" className="py-14 sm:py-20 bg-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="inline-block text-brandBlue bg-brandBlue/5 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">Simple Booking</span>
+              <h2 className="font-headline text-2xl sm:text-4xl font-bold tracking-tight mb-2 text-brandDark">
                 How It Works
               </h2>
-              <p className="text-slate-500 max-w-xl">Four simple steps to your destination with unparalleled comfort.</p>
+              <p className="text-slate-400 max-w-md mx-auto text-sm">Four steps to your destination.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {steps.map((step) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative">
+              {/* Connector Line for Desktop */}
+              <div className="hidden md:block absolute top-8 left-[14%] right-[14%] h-[2px] bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+              {steps.map((step, idx) => (
                 <div
                   key={step.title}
-                  className="p-8 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/50 group hover:bg-brandBlue transition-all duration-500 shadow-sm hover:shadow-brand"
+                  className="relative text-center group"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-brandBlue/10 flex items-center justify-center text-brandBlue mb-6 group-hover:bg-white group-hover:text-brandBlue transition-colors">
-                    <span className="material-symbols-outlined">{step.icon}</span>
+                  <div className="w-16 h-16 mx-auto bg-white border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.06)] rounded-2xl flex items-center justify-center mb-4 relative z-10 group-hover:scale-105 transition-transform duration-300">
+                    <span className="material-symbols-outlined text-[24px] text-brandBlue">{step.icon}</span>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-brandDark text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
+                      {idx + 1}
+                    </div>
                   </div>
-                  <h3 className="font-headline text-xl font-bold mb-3 text-brandDark group-hover:text-white transition-colors">{step.title}</h3>
-                  <p className="text-sm text-slate-500 group-hover:text-white/80 transition-colors">{step.desc}</p>
+                  <h3 className="font-bold text-sm sm:text-base mb-1 text-slate-800">{step.title}</h3>
+                  <p className="text-slate-400 text-xs sm:text-sm">{step.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ═══ AIRPORT SERVICE AREAS ═══ */}
-        <section id="airport-areas" className="py-20 bg-white/60">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="font-headline text-4xl font-bold tracking-tight mb-4 text-brandDark">
-                Book Airport Cab in Bangalore
+        {/* ═══ POPULAR AIRPORT ROUTES ═══ */}
+        <section id="airport-areas" className="py-12 sm:py-20 bg-white/60">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8 sm:mb-12">
+              <span className="inline-block text-brandBlue bg-brandBlue/5 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Popular Routes</span>
+              <h2 className="font-headline text-2xl sm:text-4xl font-bold tracking-tight mb-3 sm:mb-4 text-brandDark">
+                Airport Cab from Bangalore
               </h2>
-              <p className="text-slate-500 max-w-2xl mx-auto text-sm">
-                We provide airport taxi pickup and drop from all major areas in Bangalore to Kempegowda International Airport.
+              <p className="text-slate-500 max-w-xl mx-auto text-sm">
+                Pickup & drop from all major areas to Kempegowda International Airport.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {airportAreas.map((area) => (
-                <div
-                  key={area}
-                  className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm"
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {airportAreas.map((item) => (
+                <a
+                  key={item.area}
+                  href="tel:+919880691116"
+                  className="group flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-lg hover:border-brandBlue/30 hover:-translate-y-0.5 transition-all duration-300"
                 >
-                  <span className="material-symbols-outlined text-[16px] text-brandBlue">flight_takeoff</span>
-                  {area} to Airport
-                </div>
+                  <div className="w-10 h-10 rounded-xl bg-brandBlue/5 flex items-center justify-center shrink-0 group-hover:bg-brandBlue/10 transition-colors">
+                    <span className="material-symbols-outlined text-[18px] text-brandBlue">flight_takeoff</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 truncate">{item.area}</p>
+                    <p className="text-[11px] text-slate-400">{item.dist} to Airport</p>
+                  </div>
+                </a>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <a href="tel:+919880691116" className="inline-flex items-center gap-2 text-sm font-semibold text-brandBlue hover:underline">
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                All Bangalore areas covered — Call to book
+              </a>
             </div>
           </div>
         </section>
 
-        {/* ═══ OUTSTATION DESTINATIONS ═══ */}
-        <section id="outstation-areas" className="py-20 bg-transparent">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="font-headline text-4xl font-bold tracking-tight mb-4 text-brandDark">
-                Book Outstation Taxi from Bangalore
+        {/* ═══ POPULAR OUTSTATION ROUTES ═══ */}
+        <section id="outstation-areas" className="py-12 sm:py-20 bg-slate-50/50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8 sm:mb-12">
+              <span className="inline-block text-emerald-600 bg-emerald-50 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Top Destinations</span>
+              <h2 className="font-headline text-2xl sm:text-4xl font-bold tracking-tight mb-3 sm:mb-4 text-brandDark">
+                Outstation Taxi from Bangalore
               </h2>
-              <p className="text-slate-500 max-w-2xl mx-auto text-sm">
-                Comfortable and safe outstation cab service from Bangalore to popular destinations across South India.
+              <p className="text-slate-500 max-w-xl mx-auto text-sm">
+                Comfortable cab service to the most popular destinations across South India.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {outstationDestinations.map((dest) => (
-                <div
-                  key={dest}
-                  className="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-600 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm"
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {outstationDestinations.map((item) => (
+                <a
+                  key={item.dest}
+                  href="tel:+919880691116"
+                  className="group relative bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-lg hover:border-emerald-200 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                 >
-                  <span className="material-symbols-oriented text-[16px] text-brandBlue">map</span>
-                  Bangalore to {dest}
-                </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                      <span className="material-symbols-outlined text-[18px] text-emerald-600">map</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800">{item.dest}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{item.dist} · {item.time}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
+                    <span className="text-xs font-bold text-brandDark">From ₹12/km</span>
+                    <span className="text-[11px] text-brandBlue font-semibold group-hover:translate-x-0.5 transition-transform">Book →</span>
+                  </div>
+                </a>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <a href="tel:+919880691116" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:underline">
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                More destinations available — Call to book
+              </a>
             </div>
           </div>
         </section>
 
         {/* ═══ ABOUT ═══ */}
-        <section className="py-20 bg-slate-50/50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <section className="py-12 sm:py-20 bg-slate-50/50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-14 items-start">
               <div>
-                <h2 className="font-headline text-4xl font-bold tracking-tight mb-6 text-brandDark">
-                  Nearest Airport Taxi Service in Bangalore
+                <span className="inline-block text-brandBlue bg-brandBlue/5 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">About Us</span>
+                <h2 className="font-headline text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-brandDark">
+                  Nearest Airport Taxi in Bangalore
                 </h2>
-                <p className="text-slate-500 leading-relaxed mb-4">
-                  Airlinecabz is the nearest and most trusted cab service provider in Bangalore. Whether you need an airport taxi late at night or a cab for a family vacation, Airlinecabz is always near you with 24/7 service.
+                <p className="text-slate-500 leading-relaxed mb-4 text-sm">
+                  Airlinecabz is the most trusted cab service provider in Bangalore. Whether you need an airport taxi late at night or a cab for a family vacation, we are always near you with 24/7 service.
                 </p>
-                <p className="text-slate-500 leading-relaxed mb-6">
-                  We have a wide range of A/C and Non-A/C luxury cabs available near you for personal and corporate use. Book nearest airport taxi, outstation cabs, and local taxi services from airlinecabz.
-                </p>
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    "Wide range of A/C & Non-A/C luxury cabs",
-                    "Innova, Dzire, Etios, Ertiga & more",
-                    "Local, Airport & Outstation services",
-                    "Corporate & personal travel solutions",
+                    "A/C & Non-A/C luxury cabs",
+                    "Innova, Dzire, Etios & more",
+                    "Airport & Outstation service",
+                    "Corporate travel solutions",
                   ].map((point) => (
-                    <div key={point} className="flex items-center gap-3 text-sm text-slate-600">
-                      <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs shrink-0">✓</span>
+                    <div key={point} className="flex items-center gap-2.5 text-sm text-slate-600">
+                      <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-[11px] shrink-0">✓</span>
                       {point}
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-brandBlue rounded-3xl p-8 text-white">
-                  <span className="material-symbols-outlined text-4xl mb-4 block opacity-80">flight</span>
-                  <h3 className="font-bold text-xl mb-2">Airport Taxi</h3>
-                  <p className="text-white/70 text-sm">24×7 airport pickup &amp; drop across Bangalore</p>
-                  <p className="mt-4 font-extrabold text-2xl">₹799+</p>
+              {/* Service summary cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-brandBlue rounded-2xl p-5 text-white">
+                  <span className="material-symbols-outlined text-2xl mb-2 block opacity-80">flight</span>
+                  <h3 className="font-bold text-sm mb-1">Airport Taxi</h3>
+                  <p className="text-white/60 text-xs">24×7 pickup & drop</p>
+                  <p className="mt-2 font-extrabold text-lg">₹799+</p>
                 </div>
-                <div className="bg-white rounded-3xl p-8 shadow-soft border border-slate-100">
-                  <span className="material-symbols-outlined text-4xl mb-4 block text-brandBlue">explore</span>
-                  <h3 className="font-bold text-xl mb-2 text-brandDark">Outstation</h3>
-                  <p className="text-slate-500 text-sm">Comfortable rides across South India</p>
-                  <p className="mt-4 font-extrabold text-2xl text-brandDark">₹12/km+</p>
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                  <span className="material-symbols-outlined text-2xl mb-2 block text-brandBlue">explore</span>
+                  <h3 className="font-bold text-sm mb-1 text-brandDark">Outstation</h3>
+                  <p className="text-slate-400 text-xs">South India trips</p>
+                  <p className="mt-2 font-extrabold text-lg text-brandDark">₹12/km</p>
                 </div>
-                <div className="bg-white rounded-3xl p-8 shadow-soft border border-slate-100">
-                  <span className="material-symbols-outlined text-4xl mb-4 block text-brandBlue">location_city</span>
-                  <h3 className="font-bold text-xl mb-2 text-brandDark">Local Hire</h3>
-                  <p className="text-slate-500 text-sm">4hr &amp; 8hr local packages in Bangalore</p>
-                  <p className="mt-4 font-extrabold text-2xl text-brandDark">₹1,300+</p>
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                  <span className="material-symbols-outlined text-2xl mb-2 block text-brandBlue">location_city</span>
+                  <h3 className="font-bold text-sm mb-1 text-brandDark">Local Hire</h3>
+                  <p className="text-slate-400 text-xs">4hr & 8hr packages</p>
+                  <p className="mt-2 font-extrabold text-lg text-brandDark">₹1,300+</p>
                 </div>
-                <div className="bg-slate-900 rounded-3xl p-8 text-white">
-                  <span className="material-symbols-outlined text-4xl mb-4 block opacity-80">support_agent</span>
-                  <h3 className="font-bold text-xl mb-2">24×7 Support</h3>
-                  <p className="text-white/70 text-sm">Always here whenever you need us</p>
-                  <a href="tel:+919880691116" className="mt-4 block font-extrabold text-brandBlue">98806 91116</a>
+                <div className="bg-slate-900 rounded-2xl p-5 text-white">
+                  <span className="material-symbols-outlined text-2xl mb-2 block opacity-80">support_agent</span>
+                  <h3 className="font-bold text-sm mb-1">24×7 Support</h3>
+                  <p className="text-white/60 text-xs">Always available</p>
+                  <a href="tel:+919880691116" className="mt-2 block font-extrabold text-brandBlue text-sm">98806 91116</a>
                 </div>
               </div>
             </div>
@@ -550,30 +636,30 @@ export default function LandingPage() {
         </section>
 
         {/* ═══ CTA BANNER ═══ */}
-        <section className="py-20 bg-transparent">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="bg-brandDark rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-brandBlue/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        <section className="py-10 sm:py-16 bg-transparent">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="bg-brandDark rounded-3xl p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brandBlue/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
               <div className="relative z-10">
-                <h2 className="font-headline text-4xl md:text-5xl font-extrabold text-white mb-4">
-                  Book Nearest Airport Taxi Now
+                <h2 className="font-headline text-2xl sm:text-4xl font-bold text-white mb-3">
+                  Book Nearest Airport Taxi
                 </h2>
-                <p className="text-white/60 mb-10 max-w-xl mx-auto">
-                  Nearest airport taxi service in Bangalore. Innova Crysta starting at ₹1,999. Available 24/7 near you!
+                <p className="text-white/50 mb-6 sm:mb-8 max-w-md mx-auto text-sm">
+                  Innova Crysta from ₹1,999. Available 24/7 near you.
                 </p>
-                <div className="flex flex-wrap justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
                   <a
                     href="tel:+919880691116"
-                    className="bg-brandBlue text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-brand hover:scale-105 transition-transform inline-flex items-center gap-3"
+                    className="bg-brandBlue text-white px-8 py-4 rounded-2xl font-bold text-base shadow-brand hover:scale-[1.02] transition-all inline-flex items-center justify-center gap-2 active:scale-95"
                   >
-                    <span className="material-symbols-outlined">call</span>
+                    <span className="material-symbols-outlined text-[20px]">call</span>
                     +91 98806 91116
                   </a>
                   <Link
                     href="/book"
-                    className="bg-white/10 text-white border border-white/20 px-10 py-5 rounded-2xl font-bold text-xl hover:bg-white/20 transition-all inline-flex items-center gap-3"
+                    className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-bold text-base hover:bg-white/15 transition-all inline-flex items-center justify-center gap-2 active:scale-95"
                   >
-                    <span className="material-symbols-outlined">calendar_month</span>
+                    <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                     Book Online
                   </Link>
                 </div>
@@ -583,17 +669,17 @@ export default function LandingPage() {
         </section>
 
         {/* ═══ FAQ SECTION FOR SEO ═══ */}
-        <section className="py-20 bg-white/60">
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="font-headline text-4xl font-bold tracking-tight mb-4 text-brandDark">
+        <section className="py-12 sm:py-20 bg-white/60">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="font-headline text-2xl sm:text-4xl font-bold tracking-tight mb-3 sm:mb-4 text-brandDark">
                 Frequently Asked Questions
               </h2>
-              <p className="text-slate-500">
+              <p className="text-slate-500 text-sm sm:text-base">
                 Everything you need to know about Airlinecabz airport taxi service
               </p>
             </div>
-            <div className="space-y-4">
+            <Accordion className="space-y-3">
               {[
                 {
                   q: "How can I book the nearest airport taxi in Bangalore?",
@@ -628,17 +714,21 @@ export default function LandingPage() {
                   a: "Yes, Airlinecabz has served 50,000+ happy customers with a 4.9 rating and ultra-low cancellation rate. We are known for being on time, safe, and reliable for all airport transfers."
                 }
               ].map((faq, idx) => (
-                <details key={idx} className="bg-white rounded-2xl border border-slate-200 p-6 group">
-                  <summary className="font-bold text-brandDark cursor-pointer list-none flex items-center justify-between">
-                    <span>{faq.q}</span>
-                    <span className="material-symbols-outlined text-brandBlue group-open:rotate-180 transition-transform">expand_more</span>
-                  </summary>
-                  <p className="mt-4 text-slate-600 text-sm leading-relaxed">{faq.a}</p>
-                </details>
+                <AccordionItem key={idx} value={`item-${idx}`} className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 px-4 sm:px-6">
+                  <AccordionTrigger className="hover:no-underline font-bold text-brandDark text-sm sm:text-base text-left">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-slate-600 text-xs sm:text-sm leading-relaxed pb-4">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </div>
         </section>
+
+        {/* Extra bottom padding for mobile bottom nav */}
+        <div className="h-20 md:h-0" />
 
         <Footer />
         <MobileBottomNav />

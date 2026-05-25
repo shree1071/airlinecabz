@@ -1,19 +1,10 @@
-import { Booking } from "@/types";
+import { Booking, toNumber } from "@/types";
 
 /**
  * Generate WhatsApp Web URL with pre-filled booking confirmation message
  * This is a workaround for sending messages before WhatsApp Business API production access
  */
-export function generateWhatsAppLink(booking: {
-  id: string;
-  customer_name: string;
-  customer_phone: string;
-  pickup_location: string;
-  dropoff_location: string;
-  pickup_date: string;
-  vehicle_type: string;
-  total_amount: number;
-}): string {
+export function generateWhatsAppLink(booking: Booking): string {
   // Format phone number (remove non-digits)
   const phoneNumber = booking.customer_phone.replace(/\D/g, '');
   
@@ -42,7 +33,7 @@ To: ${booking.dropoff_location}
 Date: ${pickupDate}
 Time: ${pickupTime}
 Vehicle: ${booking.vehicle_type}
-Total Amount: ₹${booking.total_amount}
+Total Amount: ₹${toNumber(booking.total_amount)}
 
 We will contact you 30 minutes before pickup. Have a safe journey.
 
