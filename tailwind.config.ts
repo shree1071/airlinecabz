@@ -13,7 +13,7 @@ const config: Config = {
         brandBlue: '#254BFF',
         brandDark: '#111827',
         /* ── AeroStream Blue – Material Design 3 Tokens ── */
-        primary: "#00288e",
+        "m-primary": "#00288e",
         "on-primary": "#ffffff",
         "primary-container": "#1e40af",
         "on-primary-container": "#a8b8ff",
@@ -23,7 +23,7 @@ const config: Config = {
         "on-primary-fixed-variant": "#173bab",
         "inverse-primary": "#b8c4ff",
 
-        secondary: "#505f76",
+        "m-secondary": "#505f76",
         "on-secondary": "#ffffff",
         "secondary-container": "#d0e1fb",
         "on-secondary-container": "#54647a",
@@ -46,7 +46,7 @@ const config: Config = {
         "error-container": "#ffdad6",
         "on-error-container": "#93000a",
 
-        background: "#fbf8ff",
+        "m-background": "#fbf8ff",
         "on-background": "#1a1b22",
         surface: "#fbf8ff",
         "on-surface": "#1a1b22",
