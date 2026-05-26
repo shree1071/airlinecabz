@@ -296,7 +296,7 @@ export async function sendBookingNotificationEmail(
 
   const { data, error } = await resend.emails.send({
     from: "Airlinecabz Bookings <onboarding@resend.dev>",
-    to: ["airlinecabz@gmail.com"],
+    to: ["shreeharshastark@gmail.com"], // TODO: Change to airlinecabz@gmail.com after verifying domain on resend.com/domains
     subject: `🚕 New Booking: ${booking.customer_name} → ${booking.vehicle_type} on ${new Date(booking.pickup_date).toLocaleDateString("en-IN")}`,
     html,
   });
