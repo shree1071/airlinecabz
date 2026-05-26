@@ -223,9 +223,14 @@ export default function BookingPage() {
     
     const selectedDate = new Date(pickupDate);
     const now = new Date();
-    const isToday = selectedDate.getFullYear() === now.getFullYear() &&
-      selectedDate.getMonth() === now.getMonth() &&
-      selectedDate.getDate() === now.getDate();
+    
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const selDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    
+    // Past dates are invalid
+    if (selDate < today) return false;
+    
+    const isToday = selDate.getTime() === today.getTime();
     
     if (!isToday) return true;
     
@@ -428,6 +433,15 @@ export default function BookingPage() {
 
     if (!pickupDate) {
       newErrors.pickupDate = "Please select a pickup date";
+    } else {
+      const selectedDate = new Date(pickupDate);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const selDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      
+      if (selDate < today) {
+        newErrors.pickupDate = "Pickup date cannot be in the past";
+      }
     }
 
     if (!pickupTime) {
@@ -523,13 +537,41 @@ export default function BookingPage() {
         }),
       });
 
-      const { booking, error } = await bookingRes.json();
+      const result = await bookingRes.json();
       
-      if (error) {
-        alert("Booking failed: " + error);
+      if (result.error) {
+        // Map backend validation errors to frontend fields to show them in RED
+        if (result.details && Array.isArray(result.details)) {
+          const backendErrors: typeof errors = {};
+          result.details.forEach((err: string) => {
+            const errLower = err.toLowerCase();
+            if (errLower.includes('name')) backendErrors.customerName = err;
+            else if (errLower.includes('email')) backendErrors.customerEmail = err;
+            else if (errLower.includes('phone')) backendErrors.customerPhone = err;
+            else if (errLower.includes('pickup location')) backendErrors.pickupLocation = err;
+            else if (errLower.includes('dropoff')) backendErrors.dropoffLocation = err;
+            else if (errLower.includes('date')) backendErrors.pickupDate = err;
+            else if (errLower.includes('time')) backendErrors.pickupTime = err;
+            else if (errLower.includes('vehicle')) backendErrors.vehicle = err;
+          });
+          
+          if (Object.keys(backendErrors).length > 0) {
+            setErrors(backendErrors);
+            const firstErrorField = Object.keys(backendErrors)[0];
+            const errorElement = document.querySelector(`[data-field="${firstErrorField}"]`);
+            if (errorElement) {
+              errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+        
+        const details = result.details ? "\n• " + result.details.join("\n• ") : "";
+        alert("Booking failed: " + result.error + details);
         setSubmitting(false);
         return;
       }
+
+      const booking = result.booking;
 
       // Redirect to confirmation page with booking ID
       router.push(`/booking-confirmation?id=${booking.id}`);
@@ -1044,6 +1086,7 @@ export default function BookingPage() {
                           errors.pickupDate ? 'border-2 border-red-500 focus:border-red-500' : ''
                         }`}
                         type="date"
+                        min={new Date().toLocaleDateString('en-CA')}
                         value={pickupDate}
                         onChange={(e) => {
                           setPickupDate(e.target.value);
