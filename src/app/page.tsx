@@ -234,7 +234,15 @@ export default function LandingPage() {
               <span className="font-bold text-amber-300"> Starting at ₹799.</span>
             </p>
             {/* CTA row — side by side on mobile too */}
-            <div className="mt-5 sm:mt-6 flex flex-row items-center gap-3">
+            <div className="mt-5 sm:mt-6 flex flex-row items-center gap-3 flex-wrap">
+              <a
+                href="#cars"
+                onClick={(e) => { e.preventDefault(); document.getElementById('cars')?.scrollIntoView({ behavior: 'smooth' }); }}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-brandBlue to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-brandBlue/40 active:scale-95 animate-pulse-slow"
+              >
+                <span className="material-symbols-outlined text-[18px]">directions_car</span>
+                Book Now
+              </a>
               <a
                 href="tel:+919880691116"
                 className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold text-sm px-5 py-3.5 rounded-2xl transition-all shadow-lg shadow-green-500/40 active:scale-95"

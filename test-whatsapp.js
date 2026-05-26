@@ -1,9 +1,9 @@
 // Test script for WhatsApp Admin Alert
 // Run with: node test-whatsapp.js
 
-const token = "EAASuuoexBd0BRvJvDNxG50Hn4iQPZAdzI3871rEufUgRL1T4WJTtJ2wWw78v71EsqBGzibdhnSQ8NUT973epnWjqpmdSvHe81OXTJ1rF1GQUDsugmAmxL3YMBypgfI60twqjZCZBkFCYofG0e8sbelPYx1bbOlq8mmtPFMtKVunlhZBtUxy4xBvz4tLE5AZDZD";
+const token = "EAAN9kWbFySgBRqxYJeNhzf45EZCZBFJkW58uYWR6mw4JioJTtEKLZCnyn0xq0qXlTxfJgUIoyFrIJJaWRh9p3UTZBedVc4tPTQGqMVqRF6ZBo2ZCqesB7ImHZCpYHC8cA0dgaS4ULpY1AVcYFTtVx6CVdbORQGS656CFyVDZColZBh1Ellp2NTBAe7pDYOXdcPZA8e0gfJDFUtgB3ZABHPlJFGhyRZAe1VRZCTMZBA1B0MQUM0NoSZASkPT4bkN0DyLv0EbTaFluPzOEKHRd86rwZAkHyymyQzMZD";
 const phoneId = "1169752749545559";
-const adminPhone = "919880691116"; // +91 9880691116
+const adminPhone = "919901366449"; // +91 9901366449
 
 // Test booking data
 const booking = {
@@ -24,7 +24,7 @@ const payload = {
   to: adminPhone,
   type: "template",
   template: {
-    name: "booking_confirmed", // ← CHANGE THIS if your template name is different
+    name: "booking_confirm",
     language: { code: "en" },
     components: [
       {

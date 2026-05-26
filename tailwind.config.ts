@@ -133,10 +133,15 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateX(20px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "pulse-slow": {
+          "0%, 100%": { boxShadow: "0 4px 14px rgba(37, 75, 255, 0.4)" },
+          "50%": { boxShadow: "0 4px 24px rgba(37, 75, 255, 0.65)" },
+        },
       },
       animation: {
         "fade-in-up": "fade-in-up 0.6s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
+        "pulse-slow": "pulse-slow 2.5s ease-in-out infinite",
       },
     },
   },

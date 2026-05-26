@@ -17,7 +17,7 @@ export async function sendWhatsAppBookingAlert(booking: WhatsAppAlertData) {
   }
 
   // Admin phone number to receive alerts (without '+' symbol)
-  const adminPhone = "919880691116";
+  const adminPhone = "919901366449";
 
   const dt = new Date(booking.pickup_date);
   const dateStr = dt.toLocaleDateString("en-IN", {
@@ -36,7 +36,7 @@ export async function sendWhatsAppBookingAlert(booking: WhatsAppAlertData) {
     to: adminPhone,
     type: "template",
     template: {
-      name: "booking_confirmed", // Note: Ensure this matches the internal template name in Meta Manager exactly (it might be booking_confirmation)
+      name: "booking_confirm",
       language: {
         code: "en"
       },
@@ -44,14 +44,14 @@ export async function sendWhatsAppBookingAlert(booking: WhatsAppAlertData) {
         {
           type: "body",
           parameters: [
-            { type: "text", text: "SHREEHARSHA" },                               // {{1}}
-            { type: "text", text: booking.id.slice(0, 8).toUpperCase() },        // {{2}}
-            { type: "text", text: booking.pickup_location.slice(0, 25) + "..." },// {{3}} Max 30 chars for template variables usually
-            { type: "text", text: booking.dropoff_location.slice(0, 25) + "..." },// {{4}}
-            { type: "text", text: dateStr },                                     // {{5}}
-            { type: "text", text: timeStr },                                     // {{6}}
-            { type: "text", text: booking.vehicle_type || "N/A" },               // {{7}}
-            { type: "text", text: booking.total_amount?.toString() || "0" }      // {{8}}
+            { type: "text", text: "SHREEHARSHA" },
+            { type: "text", text: booking.id.slice(0, 8).toUpperCase() },
+            { type: "text", text: booking.pickup_location.slice(0, 25) + "..." },
+            { type: "text", text: booking.dropoff_location.slice(0, 25) + "..." },
+            { type: "text", text: dateStr },
+            { type: "text", text: timeStr },
+            { type: "text", text: booking.vehicle_type || "N/A" },
+            { type: "text", text: booking.total_amount?.toString() || "0" }
           ]
         }
       ]
