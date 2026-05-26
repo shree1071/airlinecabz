@@ -401,6 +401,38 @@ export default function BookingPage() {
     }
   }, [vehicles]); // Run when vehicles are loaded
 
+  // Validate all fields simultaneously
+  const isFormValid = React.useMemo(() => {
+    if (!customerName.trim()) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return false;
+    if (!/^\+?[\d\s-]{10,}$/.test(customerPhone)) return false;
+    
+    if (!pickupDate) return false;
+    const selectedDate = new Date(pickupDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) return false;
+    
+    if (!pickupTime || !isValidTime(pickupTime)) return false;
+    
+    if (tripType === "to_airport") {
+      if (!pickupText.trim() && !pickupLat) return false;
+      if (!addressLine1.trim()) return false;
+    } else {
+      if (!dropoffText.trim()) return false;
+      if (!addressLine1.trim()) return false;
+    }
+    
+    if (!selectedVehicle) return false;
+    if (gettingLocation || calculatingDistance) return false;
+    
+    return true;
+  }, [
+    customerName, customerEmail, customerPhone, pickupDate, pickupTime, 
+    pickupText, pickupLat, addressLine1, dropoffText, tripType, 
+    selectedVehicle, gettingLocation, calculatingDistance
+  ]);
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
@@ -1282,14 +1314,23 @@ export default function BookingPage() {
               <div className="space-y-3 md:space-y-4">
                 <button 
                   onClick={handleSubmit}
-                  disabled={submitting}
+                  disabled={submitting || !isFormValid}
                   type="button"
-                  className="w-full py-4 md:py-5 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white font-headline font-extrabold text-base md:text-lg shadow-2xl shadow-primary/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 md:gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                  className={`w-full py-4 md:py-5 rounded-xl md:rounded-2xl font-headline font-extrabold text-base md:text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 md:gap-3 ${
+                    isFormValid 
+                      ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-primary/30' 
+                      : 'bg-surface-container-high text-slate-400 cursor-not-allowed border border-outline-variant/20'
+                  }`}
                 >
                   {submitting ? (
                     <>
                       <span className="animate-spin material-symbols-outlined text-lg md:text-xl">progress_activity</span>
                       Submitting...
+                    </>
+                  ) : !isFormValid ? (
+                    <>
+                      <span className="material-symbols-outlined text-lg md:text-xl">edit_document</span>
+                      Please complete all fields
                     </>
                   ) : (
                     <>
