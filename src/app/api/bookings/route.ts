@@ -64,6 +64,8 @@ export async function POST(req: Request) {
     // SECURITY: Comprehensive input validation
     const validation = validateBookingInput(body);
     if (!validation.valid) {
+      console.error("[Bookings] Validation failed:", JSON.stringify(validation.errors));
+      console.error("[Bookings] Body received:", JSON.stringify(body, null, 2));
       logSecurityViolation('Invalid booking input', req, { errors: validation.errors });
       return NextResponse.json({ 
         error: "Invalid input", 
