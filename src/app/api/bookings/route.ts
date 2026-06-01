@@ -26,14 +26,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid status parameter" }, { status: 400 });
     }
 
+    // 4NF Relational Query
+    // We join all related tables to construct a complete booking object
     let query = insforge.database
       .from("bookings")
-      .select("*")
+      .select(`
+        *,
+        pickup_address:pickup_address_id(*),
+        dropoff_address:dropoff_address_id(*),
+        passengers:booking_passengers(*),
+        financials:booking_financials(*),
+        status_history:booking_status_history(*),
+        assignments:ride_assignments(*)
+      `)
       .order("created_at", { ascending: false });
-
-    if (sanitizedStatus && sanitizedStatus !== "all") {
-      query = query.eq("status", sanitizedStatus);
-    }
 
     const { data, error } = await query;
 
@@ -41,11 +47,50 @@ export async function GET(req: Request) {
       logger.logError("Error fetching bookings", error, "/api/bookings");
       return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });
     }
+    
+    // Filter by status if provided (since status is now in status_history, we check the latest event)
+    let filteredData = data;
+    if (sanitizedStatus && sanitizedStatus !== "all") {
+      filteredData = data.filter((booking: any) => {
+        // Find latest status event
+        const latestStatus = booking.status_history?.sort((a: any, b: any) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )[0];
+        return latestStatus?.status === sanitizedStatus;
+      });
+    }
+
+    // Map 4NF nested structure to flat DTO for the frontend
+    const mappedData = filteredData.map((b: any) => {
+      const passenger = b.passengers?.[0] || {};
+      const financial = b.financials?.[0] || {};
+      const latestStatus = b.status_history?.sort((a: any, b: any) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )[0] || {};
+
+      return {
+        ...b,
+        customer_name: passenger.name || '',
+        customer_email: passenger.email || '',
+        customer_phone: passenger.phone || '',
+        pickup_location: b.pickup_address?.text_location || '',
+        dropoff_location: b.dropoff_address?.text_location || '',
+        address_line1: b.pickup_address?.address_line1 || '',
+        address_line2: b.pickup_address?.address_line2 || '',
+        landmark: b.pickup_address?.landmark || '',
+        area: b.pickup_address?.area || '',
+        pincode: b.pickup_address?.pincode || '',
+        base_fare: financial.base_fare || 0,
+        taxes: financial.taxes || 0,
+        total_amount: financial.total_amount || 0,
+        status: latestStatus.status || 'pending',
+      };
+    });
 
     logRequest(req, 200);
     logger.logDataAccess('admin', 'bookings', 'read', ip);
     
-    return NextResponse.json({ bookings: data });
+    return NextResponse.json({ bookings: mappedData });
   } catch (err) {
     logger.logError("Unexpected error in GET /api/bookings", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -58,22 +103,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // SECURITY: Import validation functions
     const { validateBookingInput, sanitizeInput, isValidEmail, isValidPhone } = await import("@/lib/auth");
 
-    // SECURITY: Comprehensive input validation
     const validation = validateBookingInput(body);
     if (!validation.valid) {
       console.error("[Bookings] Validation failed:", JSON.stringify(validation.errors));
-      console.error("[Bookings] Body received:", JSON.stringify(body, null, 2));
       logSecurityViolation('Invalid booking input', req, { errors: validation.errors });
-      return NextResponse.json({ 
-        error: "Invalid input", 
-        details: validation.errors 
-      }, { status: 400 });
+      return NextResponse.json({ error: "Invalid input", details: validation.errors }, { status: 400 });
     }
 
-    // SECURITY: Sanitize all string inputs to prevent XSS
     const sanitizedData = {
       customer_name: sanitizeInput(body.customer_name),
       customer_email: sanitizeInput(body.customer_email),
@@ -90,7 +128,6 @@ export async function POST(req: Request) {
       terminal: body.terminal || "terminal1",
     };
 
-    // SECURITY: Additional email and phone validation
     if (!isValidEmail(sanitizedData.customer_email)) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
@@ -99,14 +136,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid phone number format" }, { status: 400 });
     }
 
-    // SECURITY: Validate and sanitize date
     let formattedDate = "";
     try {
       const date = new Date(body.pickup_date);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date");
-      }
-      // SECURITY: Ensure date is not in the past
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
       if (date < new Date()) {
         return NextResponse.json({ error: "Pickup date must be in the future" }, { status: 400 });
       }
@@ -115,69 +148,141 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid pickup date format" }, { status: 400 });
     }
 
-    // SECURITY: Validate numeric inputs
     const baseFare = typeof body.base_fare === 'number' ? Math.max(0, Math.min(body.base_fare, 1000000)) : 0;
     const taxes = typeof body.taxes === 'number' ? Math.max(0, Math.min(body.taxes, 100000)) : 0;
     const totalAmount = typeof body.total_amount === 'number' ? Math.max(0, Math.min(body.total_amount, 1000000)) : 0;
     const distanceKm = typeof body.distance_km === 'number' ? Math.max(0, Math.min(body.distance_km, 10000)) : null;
     const durationMinutes = typeof body.duration_minutes === 'number' ? Math.max(0, Math.min(body.duration_minutes, 10000)) : null;
 
-    const newBooking = {
-      ...sanitizedData,
-      pickup_date: formattedDate,
-      base_fare: baseFare,
-      taxes: taxes,
-      total_amount: totalAmount,
-      status: "pending", // SECURITY: Always set to pending, don't trust client
-      distance_km: distanceKm,
-      duration_minutes: durationMinutes,
+    // 1. Insert pickup address
+    const { data: pickupData, error: pickupErr } = await insforge.database
+      .from("addresses")
+      .insert([{
+        text_location: sanitizedData.pickup_location,
+        address_line1: sanitizedData.address_line1,
+        address_line2: sanitizedData.address_line2,
+        landmark: sanitizedData.landmark,
+        area: sanitizedData.area,
+        pincode: sanitizedData.pincode,
+      }])
+      .select().single();
+      
+    if (pickupErr) throw new Error("Failed to create pickup address");
+
+    // 2. Insert dropoff address
+    const { data: dropoffData, error: dropoffErr } = await insforge.database
+      .from("addresses")
+      .insert([{
+        text_location: sanitizedData.dropoff_location,
+      }])
+      .select().single();
+
+    if (dropoffErr) throw new Error("Failed to create dropoff address");
+
+    // 3. Insert core booking
+    const { data: bookingData, error: bookingErr } = await insforge.database
+      .from("bookings")
+      .insert([{
+        user_id: body.user_id ? sanitizeInput(body.user_id) : null,
+        trip_type: sanitizedData.trip_type,
+        terminal: sanitizedData.terminal,
+        pickup_address_id: pickupData.id,
+        dropoff_address_id: dropoffData.id,
+        pickup_time: formattedDate,
+        vehicle_type: sanitizedData.vehicle_type,
+        distance_km: distanceKm,
+        duration_minutes: durationMinutes,
+      }])
+      .select().single();
+
+    if (bookingErr) throw new Error("Failed to create booking");
+    
+    const bookingId = bookingData.id;
+
+    // 4. Insert passengers, financials, and initial status history event
+    await Promise.all([
+      insforge.database.from("booking_passengers").insert([{
+        booking_id: bookingId,
+        name: sanitizedData.customer_name,
+        email: sanitizedData.customer_email,
+        phone: sanitizedData.customer_phone
+      }]),
+      insforge.database.from("booking_financials").insert([{
+        booking_id: bookingId,
+        base_fare: baseFare,
+        taxes: taxes,
+        total_amount: totalAmount,
+        payment_status: 'pending'
+      }]),
+      insforge.database.from("booking_status_history").insert([{
+        booking_id: bookingId,
+        status: 'pending',
+        notes: 'Booking created'
+      }])
+    ]);
+
+    // Fetch the fully constructed booking object to return
+    const { data: finalBooking } = await insforge.database
+      .from("bookings")
+      .select(`
+        *,
+        pickup_address:pickup_address_id(*),
+        dropoff_address:dropoff_address_id(*),
+        passengers:booking_passengers(*),
+        financials:booking_financials(*),
+        status_history:booking_status_history(*)
+      `)
+      .eq('id', bookingId)
+      .single();
+
+    const passenger = finalBooking.passengers?.[0] || {};
+    const financial = finalBooking.financials?.[0] || {};
+    const latestStatus = finalBooking.status_history?.sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0] || {};
+
+    const flatBooking = {
+      ...finalBooking,
+      customer_name: passenger.name || '',
+      customer_email: passenger.email || '',
+      customer_phone: passenger.phone || '',
+      pickup_location: finalBooking.pickup_address?.text_location || '',
+      dropoff_location: finalBooking.dropoff_address?.text_location || '',
+      address_line1: finalBooking.pickup_address?.address_line1 || '',
+      address_line2: finalBooking.pickup_address?.address_line2 || '',
+      landmark: finalBooking.pickup_address?.landmark || '',
+      area: finalBooking.pickup_address?.area || '',
+      pincode: finalBooking.pickup_address?.pincode || '',
+      base_fare: financial.base_fare || 0,
+      taxes: financial.taxes || 0,
+      total_amount: financial.total_amount || 0,
+      status: latestStatus.status || 'pending',
     };
 
-    const { data, error } = await insforge.database
-      .from("bookings")
-      .insert([newBooking])
-      .select();
-
-    if (error) {
-      logger.logError("Error creating booking", error, "/api/bookings");
-      return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
-    }
-
-    const booking = data[0];
-
-    // Log successful booking creation
     logger.logDataAccess('customer', 'bookings', 'create', ip);
     logRequest(req, 200);
 
-    // Try sending WhatsApp alert to admin (non-blocking)
-    try {
-      const { sendWhatsAppBookingAlert } = await import("@/lib/whatsapp");
-      await sendWhatsAppBookingAlert({
-        id: booking.id,
-        pickup_location: booking.pickup_location,
-        dropoff_location: booking.dropoff_location,
-        pickup_date: booking.pickup_date,
-        vehicle_type: booking.vehicle_type,
-        total_amount: booking.total_amount,
-      });
-    } catch (waError) {
-      logger.logError("Failed to send WhatsApp admin alert", waError);
-      // Don't fail the booking if notification fails
-    }
+    // Notifications...
+    // try {
+    //   const { sendWhatsAppBookingAlert } = await import("@/lib/whatsapp");
+    //   await sendWhatsAppBookingAlert({
+    //     id: bookingId,
+    //     pickup_location: sanitizedData.pickup_location,
+    //     dropoff_location: sanitizedData.dropoff_location,
+    //     pickup_date: formattedDate,
+    //     vehicle_type: sanitizedData.vehicle_type,
+    //     total_amount: totalAmount,
+    //   });
+    // } catch (waError) {}
 
-    // Try sending email notification to admin (non-blocking)
     try {
       const { sendBookingNotificationEmail } = await import("@/lib/email");
-      await sendBookingNotificationEmail(booking);
-    } catch (emailError) {
-      logger.logError("Failed to send booking email notification", emailError);
-      // Don't fail the booking if email fails
-    }
+      await sendBookingNotificationEmail(flatBooking);
+    } catch (emailError) {}
 
-    return NextResponse.json({ booking });
+    return NextResponse.json({ booking: flatBooking });
   } catch (err: any) {
     logger.logError("Unexpected error in POST /api/bookings", err);
-    // SECURITY: Don't expose internal error details to client
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
