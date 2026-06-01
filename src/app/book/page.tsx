@@ -14,6 +14,9 @@ import { Vehicle, toNumber } from '@/types';
 
 // Dynamically import LocationMap to avoid SSR issues
 const LocationMap = dynamic(() => import('@/components/LocationMap'), { ssr: false });
+const LocationAutocomplete = dynamic(() => import('@/components/LocationAutocomplete'), { ssr: false });
+import AuthModal from "@/components/AuthModal";
+import { insforge } from "@/lib/insforge";
 
 // Create a custom theme for MUI components to match your design
 const theme = createTheme({
@@ -39,10 +42,14 @@ const theme = createTheme({
 export default function BookingPage() {
   const router = useRouter();
   
+  
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   
+  const [user, setUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   // Form State
   const [tripType, setTripType] = useState<"to_airport" | "from_airport">("to_airport");
   const [terminal, setTerminal] = useState<"terminal1" | "terminal2">("terminal1");
@@ -67,6 +74,12 @@ export default function BookingPage() {
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState<Dayjs | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shakeBtn, setShakeBtn] = useState(false);
+
+  const triggerShake = () => {
+    setShakeBtn(true);
+    setTimeout(() => setShakeBtn(false), 600);
+  };
   const [gettingLocation, setGettingLocation] = useState(false);
   
   // Distance calculation
@@ -312,7 +325,11 @@ export default function BookingPage() {
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setPickupLat(lat);
     setPickupLng(lng);
-    setPickupText(address);
+    if (tripType === "to_airport") {
+      setPickupText(address);
+    } else {
+      setDropoffText(address);
+    }
     setShowMap(false); // Close map after selection
     
     // Fetch detailed address components for autofill
@@ -345,7 +362,20 @@ export default function BookingPage() {
     setPincode("");
   }, [tripType, terminal]);
 
-  const baseFare = selectedVehicle ? toNumber(selectedVehicle.base_fare) : 0;
+  const calculateFare = () => {
+    if (!selectedVehicle) return 0;
+    const dbBaseFare = toNumber(selectedVehicle.base_fare);
+    if (dbBaseFare > 0) return dbBaseFare;
+    
+    // Fallback to per_km_rate if base_fare is 0 (e.g., for outstation vehicles like force-urbania)
+    const perKmRate = toNumber(selectedVehicle.per_km_rate);
+    if (distance && perKmRate > 0) {
+      return Math.round(distance * perKmRate);
+    }
+    return 0;
+  };
+  
+  const baseFare = calculateFare();
   const totalAmount = baseFare; // No taxes, just base fare
 
   // Fetch vehicles from API
@@ -359,10 +389,14 @@ export default function BookingPage() {
       .then((data) => {
         console.log("Vehicles data:", data);
         if (data.vehicles) {
-          // Filter only airport vehicles (exclude outstation and local)
-          const airportVehicles = data.vehicles.filter((v: Vehicle) => 
-            v.vehicle_category === 'airport' || !v.vehicle_category
-          );
+          // Filter only airport vehicles (strictly exclude outstation)
+          const airportVehicles = data.vehicles.filter((v: Vehicle) => {
+            const isOutstation = v.vehicle_category === 'outstation' || 
+                                 v.slug.includes('force-urbania') || 
+                                 v.slug.includes('tempo-traveller') || 
+                                 v.name.toLowerCase().includes('outstation');
+            return !isOutstation && (v.vehicle_category === 'airport' || !v.vehicle_category);
+          });
           console.log("Filtered airport vehicles:", airportVehicles.length);
           console.log("First vehicle:", airportVehicles[0]);
           console.log("First vehicle base_fare type:", typeof airportVehicles[0]?.base_fare);
@@ -381,16 +415,71 @@ export default function BookingPage() {
       });
   }, []);
 
+  // Load user session and saved form state on mount
+  useEffect(() => {
+    insforge.auth.getCurrentUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+        
+        // Auto-fill from user profile if state wasn't previously loaded
+        const saved = localStorage.getItem('bookingFormState');
+        if (!saved) {
+          if (data.user.profile?.name) setCustomerName(data.user.profile.name);
+          if (data.user.email) setCustomerEmail(data.user.email);
+        }
+      }
+    });
+
+    const saved = localStorage.getItem('bookingFormState');
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        if (state.tripType) setTripType(state.tripType);
+        if (state.terminal) setTerminal(state.terminal);
+        if (state.customerName) setCustomerName(state.customerName);
+        if (state.customerEmail) setCustomerEmail(state.customerEmail);
+        if (state.customerPhone) setCustomerPhone(state.customerPhone);
+        if (state.pickupText) setPickupText(state.pickupText);
+        if (state.dropoffText) setDropoffText(state.dropoffText);
+        if (state.pickupLat) setPickupLat(state.pickupLat);
+        if (state.pickupLng) setPickupLng(state.pickupLng);
+        if (state.addressLine1) setAddressLine1(state.addressLine1);
+        if (state.addressLine2) setAddressLine2(state.addressLine2);
+        if (state.landmark) setLandmark(state.landmark);
+        if (state.area) setArea(state.area);
+        if (state.pincode) setPincode(state.pincode);
+        if (state.pickupDate) setPickupDate(state.pickupDate);
+        if (state.pickupTime) setPickupTime(dayjs(state.pickupTime));
+      } catch (e) {
+        console.error("Error parsing saved form state", e);
+      }
+    }
+  }, []);
+
   // Auto-select vehicle from URL parameter
   React.useEffect(() => {
     if (vehicles.length > 0) {
       const params = new URLSearchParams(window.location.search);
-      const vehicleName = params.get('vehicle');
+      let vehicleName = params.get('vehicle');
+      
+      const saved = localStorage.getItem('bookingFormState');
+      if (saved && !vehicleName) {
+        try {
+          const state = JSON.parse(saved);
+          if (state.vehicleSlug) {
+            const matchingVehicle = vehicles.find(v => v.slug === state.vehicleSlug);
+            if (matchingVehicle) {
+              setSelectedVehicle(matchingVehicle);
+              return;
+            }
+          }
+        } catch (e) {}
+      }
       
       if (vehicleName) {
         // Find matching vehicle by name
         const matchingVehicle = vehicles.find(v => 
-          v.name.toLowerCase() === vehicleName.toLowerCase()
+          v.name.toLowerCase() === vehicleName?.toLowerCase()
         );
         
         if (matchingVehicle) {
@@ -436,6 +525,20 @@ export default function BookingPage() {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
+    }
+
+    // Require Auth
+    if (!user) {
+      // Save form state to localStorage
+      const state = {
+        tripType, terminal, customerName, customerEmail, customerPhone,
+        pickupText, dropoffText, pickupLat, pickupLng, addressLine1, addressLine2,
+        landmark, area, pincode, pickupDate, pickupTime: pickupTime?.toISOString(),
+        vehicleSlug: selectedVehicle?.slug
+      };
+      localStorage.setItem('bookingFormState', JSON.stringify(state));
+      setShowAuthModal(true);
+      return;
     }
 
     // Prevent double submission
@@ -566,6 +669,7 @@ export default function BookingPage() {
           status: "pending",
           distance_km: distance,
           duration_minutes: duration,
+          user_id: user.id
         }),
       });
 
@@ -605,6 +709,9 @@ export default function BookingPage() {
 
       const booking = result.booking;
 
+      // Clean up local storage state
+      localStorage.removeItem('bookingFormState');
+
       // Redirect to confirmation page with booking ID
       router.push(`/booking-confirmation?id=${booking.id}`);
     } catch (err) {
@@ -624,7 +731,15 @@ export default function BookingPage() {
   return (
     <ThemeProvider theme={theme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-outline-variant/10">
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={() => {
+            setShowAuthModal(false);
+            handleSubmit();
+          }}
+        />
+        <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-outline-variant/10">
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-4">
             <button onClick={() => router.back()} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
@@ -856,14 +971,12 @@ export default function BookingPage() {
                         )}
                         
                         <div className="group relative" data-field="pickupLocation">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">location_on</span>
-                          <input
-                            type="text"
+                          <LocationAutocomplete
+                            defaultValue={pickupText}
                             placeholder="Or type your location manually"
-                            className={`input-field ${errors.pickupLocation ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
-                            value={pickupText}
-                            onChange={(e) => {
-                              setPickupText(e.target.value);
+                            error={!!errors.pickupLocation}
+                            onSelect={(lat, lng, address) => {
+                              handleLocationSelect(lat, lng, address);
                               if (errors.pickupLocation) {
                                 setErrors(prev => ({ ...prev, pickupLocation: undefined }));
                               }
@@ -1006,14 +1119,12 @@ export default function BookingPage() {
                       <div data-field="dropoffLocation">
                         <label className="text-xs font-bold text-slate-700 mb-2 block">Dropoff Location</label>
                         <div className="group relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined z-10 text-primary/60 group-focus-within:text-primary">flag</span>
-                          <input
-                            type="text"
+                          <LocationAutocomplete
+                            defaultValue={dropoffText}
                             placeholder="Enter your destination (e.g., MG Road, Bangalore)"
-                            className={`input-field ${errors.dropoffLocation ? 'border-2 border-red-500 focus:border-red-500' : ''}`}
-                            value={dropoffText}
-                            onChange={(e) => {
-                              setDropoffText(e.target.value);
+                            error={!!errors.dropoffLocation}
+                            onSelect={(lat, lng, address) => {
+                              handleLocationSelect(lat, lng, address);
                               if (errors.dropoffLocation) {
                                 setErrors(prev => ({ ...prev, dropoffLocation: undefined }));
                               }
@@ -1312,15 +1423,37 @@ export default function BookingPage() {
               </div>
 
               <div className="space-y-3 md:space-y-4">
-                <button 
-                  onClick={handleSubmit}
-                  disabled={submitting || !isFormValid}
+                <style>{`
+                  @keyframes shake-x {
+                    0%,100% { transform: translateX(0); }
+                    15%      { transform: translateX(-8px); }
+                    30%      { transform: translateX(8px); }
+                    45%      { transform: translateX(-6px); }
+                    60%      { transform: translateX(6px); }
+                    75%      { transform: translateX(-3px); }
+                    90%      { transform: translateX(3px); }
+                  }
+                  .btn-shake { animation: shake-x 0.55s ease-in-out; }
+                `}</style>
+                <button
+                  onClick={() => {
+                    if (!isFormValid) {
+                      triggerShake();
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
+                  disabled={submitting}
                   type="button"
                   className={`w-full py-4 md:py-5 rounded-xl md:rounded-2xl font-headline font-extrabold text-base md:text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 md:gap-3 ${
-                    isFormValid 
-                      ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-primary/30' 
-                      : 'bg-surface-container-high text-slate-400 cursor-not-allowed border border-outline-variant/20'
-                  }`}
+                    submitting
+                      ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-primary/30 opacity-70 cursor-wait'
+                      : isFormValid
+                        ? 'bg-gradient-to-r from-primary to-primary-container text-white shadow-primary/30'
+                        : shakeBtn
+                          ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-red-500/40 cursor-pointer'
+                          : 'bg-red-50 text-red-500 border-2 border-red-300 cursor-pointer hover:bg-red-100 transition-colors'
+                  } ${shakeBtn ? 'btn-shake' : ''}`}
                 >
                   {submitting ? (
                     <>
