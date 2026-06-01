@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,18 +7,16 @@ import jsPDF from "jspdf";
 
 type Booking = {
   id: string;
-  customer_name: string;
-  customer_email: string;
   trip_type: string;
-  pickup_location: string;
-  dropoff_location: string;
-  pickup_date: string;
+  pickup_time: string;
   vehicle_type: string;
-  base_fare: number | string;
-  total_amount: number | string;
   created_at: string;
   distance_km?: number;
   duration_minutes?: number;
+  passengers: Array<{ name: string; email: string; phone: string }> | { name: string; email: string; phone: string };
+  financials: Array<{ base_fare: number; total_amount: number }> | { base_fare: number; total_amount: number };
+  pickup_address: { text_location: string };
+  dropoff_address: { text_location: string };
 };
 
 function BookingConfirmationContent() {
@@ -42,7 +40,13 @@ function BookingConfirmationContent() {
     try {
       const { data, error } = await insforge.database
         .from("bookings")
-        .select("*")
+        .select(`
+          *,
+          pickup_address:pickup_address_id(*),
+          dropoff_address:dropoff_address_id(*),
+          passengers:booking_passengers(*),
+          financials:booking_financials(*)
+        `)
         .eq("id", bookingId)
         .single();
 
@@ -65,17 +69,22 @@ function BookingConfirmationContent() {
   const generatePDF = () => {
     if (!booking) return;
 
+    const passenger = (Array.isArray(booking.passengers) ? booking.passengers[0] : booking.passengers) || { name: 'Guest', email: '' };
+    const financial = (Array.isArray(booking.financials) ? booking.financials[0] : booking.financials) || { total_amount: 0 };
+    const pickupLoc = booking.pickup_address?.text_location || 'N/A';
+    const dropoffLoc = booking.dropoff_address?.text_location || 'N/A';
+
     const whatsappMessage = `*Airlinecabz Booking Confirmation*%0A%0A` +
       `Booking ID: ${booking.id}%0A` +
-      `Customer: ${booking.customer_name}%0A` +
-      `Email: ${booking.customer_email}%0A` +
+      `Customer: ${passenger.name}%0A` +
+      `Email: ${passenger.email}%0A` +
       `Trip: ${booking.trip_type === 'to_airport' ? 'To Airport' : 'From Airport'}%0A` +
-      `Pickup: ${booking.pickup_location}%0A` +
-      `Dropoff: ${booking.dropoff_location}%0A` +
-      `Date: ${new Date(booking.pickup_date).toLocaleString()}%0A` +
+      `Pickup: ${pickupLoc}%0A` +
+      `Dropoff: ${dropoffLoc}%0A` +
+      `Date: ${new Date(booking.pickup_time).toLocaleString()}%0A` +
       `Vehicle: ${booking.vehicle_type}%0A` +
       (booking.distance_km ? `Distance: ${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}%0A` : '') +
-      `Amount: ₹${Number(booking.total_amount)}%0A%0A` +
+      `Amount: ₹${Number(financial.total_amount)}%0A%0A` +
       `*Additional charges may apply (toll, parking)`;
 
     // Redirect to WhatsApp
@@ -85,224 +94,252 @@ function BookingConfirmationContent() {
   const downloadPDF = () => {
     if (!booking) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
+    const passenger = (Array.isArray(booking.passengers) ? booking.passengers[0] : booking.passengers) || { name: 'Guest', email: '', phone: '' };
+    const financial = (Array.isArray(booking.financials) ? booking.financials[0] : booking.financials) || { base_fare: 0, total_amount: 0 };
+    const pickupLoc  = booking.pickup_address?.text_location  || 'N/A';
+    const dropoffLoc = booking.dropoff_address?.text_location || 'N/A';
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageWidth  = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    
-    // Colors
-    const primaryBlue = [37, 99, 235];
-    const darkGray = [51, 65, 85];
-    const lightGray = [148, 163, 184];
-    const bgGray = [248, 250, 252];
-    
-    // Header Background
-    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-    doc.rect(0, 0, pageWidth, 50, 'F');
-    
-    // Company Name
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(32);
+    const m = 18;
+
+    // Palette
+    const navy      = [15,  23,  42];
+    const blue      = [37,  99, 235];
+    const lightBlue = [219, 234, 254];
+    const slate600  = [71,  85, 105];
+    const slate400  = [148, 163, 184];
+    const slate100  = [241, 245, 249];
+    const wh        = [255, 255, 255];
+    const green     = [22,  163,  74];
+
+    // HEADER BAND
+    doc.setFillColor(navy[0], navy[1], navy[2]);
+    doc.rect(0, 0, pageWidth, 42, 'F');
+
+    // Blue accent diagonal triangle (bottom-left)
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.triangle(0, 28, 0, 42, 30, 42, 'F');
+
+    doc.setTextColor(wh[0], wh[1], wh[2]);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text('AIRLINECABZ', pageWidth / 2, 22, { align: 'center' });
-    
-    // Tagline
-    doc.setFontSize(11);
+    doc.text('AIRLINECABZ', m, 18);
+
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('Premium Airport Taxi Service', pageWidth / 2, 32, { align: 'center' });
-    
-    // Contact Info
-    doc.setFontSize(9);
-    doc.text('+91 98806 91116  |  support@airlincabz.com', pageWidth / 2, 42, { align: 'center' });
-    
-    // Document Title
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Premium Airport Taxi — Bengaluru', m, 26);
+
+    doc.setTextColor(wh[0], wh[1], wh[2]);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('BOOKING CONFIRMATION', pageWidth / 2, 65, { align: 'center' });
-    
-    // Booking ID Box
-    doc.setFillColor(219, 234, 254);
-    doc.roundedRect(margin, 75, pageWidth - (margin * 2), 12, 2, 2, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-    doc.text(`Booking ID: ${booking.id}`, pageWidth / 2, 83, { align: 'center' });
-    
-    let yPos = 95;
-    
-    // Customer Details Section
-    doc.setFillColor(bgGray[0], bgGray[1], bgGray[2]);
-    doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 28, 2, 2, 'F');
-    
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CUSTOMER DETAILS', margin + 5, yPos + 8);
-    
-    doc.setFontSize(10);
+    doc.text('INVOICE', pageWidth - m, 18, { align: 'right' });
+
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('Name:', margin + 5, yPos + 16);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Booking Confirmation', pageWidth - m, 26, { align: 'right' });
+
+    // META BAR
+    doc.setFillColor(lightBlue[0], lightBlue[1], lightBlue[2]);
+    doc.rect(0, 42, pageWidth, 14, 'F');
+    doc.setTextColor(blue[0], blue[1], blue[2]);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text(booking.customer_name, margin + 30, yPos + 16);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Email:', margin + 5, yPos + 23);
-    doc.setFont('helvetica', 'bold');
-    doc.text(booking.customer_email, margin + 30, yPos + 23);
-    
-    yPos += 35;
-    
-    // Trip Details Section
-    doc.setFillColor(bgGray[0], bgGray[1], bgGray[2]);
-    const tripSectionHeight = 45;
-    doc.roundedRect(margin, yPos, pageWidth - (margin * 2), tripSectionHeight, 2, 2, 'F');
-    
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TRIP DETAILS', margin + 5, yPos + 8);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Trip Type:', margin + 5, yPos + 16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(booking.trip_type === 'to_airport' ? 'To Airport' : 'From Airport', margin + 35, yPos + 16);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Pickup:', margin + 5, yPos + 23);
-    doc.setFont('helvetica', 'normal');
-    const pickupLines = doc.splitTextToSize(booking.pickup_location, pageWidth - margin * 2 - 40);
-    doc.text(pickupLines, margin + 35, yPos + 23);
-    
-    const pickupLinesCount = pickupLines.length;
-    const dropoffYPos = yPos + 23 + (pickupLinesCount * 5);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Dropoff:', margin + 5, dropoffYPos);
-    const dropoffLines = doc.splitTextToSize(booking.dropoff_location, pageWidth - margin * 2 - 40);
-    doc.text(dropoffLines, margin + 35, dropoffYPos);
-    
-    yPos += tripSectionHeight + 7;
-    
-    // Booking Details Section
-    doc.setFillColor(bgGray[0], bgGray[1], bgGray[2]);
-    doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 28, 2, 2, 'F');
-    
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BOOKING DETAILS', margin + 5, yPos + 8);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Date & Time:', margin + 5, yPos + 16);
-    doc.setFont('helvetica', 'bold');
-    const dateStr = new Date(booking.pickup_date).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+    doc.text(`BOOKING ID: ${booking.id.toUpperCase()}`, m, 51);
+    const dateStr = new Date(booking.pickup_time).toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
     });
-    doc.text(dateStr, margin + 35, yPos + 16);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Vehicle:', margin + 5, yPos + 23);
+    doc.text(`PICKUP: ${dateStr}`, pageWidth - m, 51, { align: 'right' });
+
+    // STATUS BADGE
+    let yPos = 60;
+    doc.setFillColor(green[0], green[1], green[2]);
+    doc.roundedRect(pageWidth - m - 30, yPos, 30, 8, 1.5, 1.5, 'F');
+    doc.setTextColor(wh[0], wh[1], wh[2]);
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(booking.vehicle_type.toUpperCase(), margin + 35, yPos + 23);
-    
-    yPos += 28;
-    
-    // Distance Section (if available)
-    if (booking.distance_km) {
-      doc.setFillColor(bgGray[0], bgGray[1], bgGray[2]);
-      doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 12, 2, 2, 'F');
-      
-      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Distance:', margin + 5, yPos + 8);
+    doc.text('CONFIRMED', pageWidth - m - 15, yPos + 5.5, { align: 'center' });
+
+    // Helpers
+    const sectionTitle = (title: string, y: number, x?: number) => {
+      const sx = x ?? m;
+      doc.setFillColor(blue[0], blue[1], blue[2]);
+      doc.rect(sx, y, 3, 6, 'F');
+      doc.setTextColor(navy[0], navy[1], navy[2]);
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      const distanceText = `${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}`;
-      doc.text(distanceText, margin + 35, yPos + 8);
-      
-      yPos += 19;
-    } else {
-      yPos += 7;
+      doc.text(title, sx + 5, y + 4.5);
+    };
+
+    const kv = (label: string, value: string, lx: number, vx: number, y: number, maxW: number) => {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(slate600[0], slate600[1], slate600[2]);
+      doc.text(label, lx, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(navy[0], navy[1], navy[2]);
+      const lines = doc.splitTextToSize(value, maxW);
+      doc.text(lines, vx, y);
+      return (lines as string[]).length;
+    };
+
+    // TWO-COLUMN CARDS
+    const cL   = m;
+    const cR   = pageWidth / 2 + 4;
+    const cW   = pageWidth / 2 - m - 4;
+    const cardH = 42;
+
+    doc.setFillColor(slate100[0], slate100[1], slate100[2]);
+    doc.roundedRect(cL, yPos, cW, cardH, 2, 2, 'F');
+    doc.roundedRect(cR, yPos, cW, cardH, 2, 2, 'F');
+
+    // Left — Customer
+    sectionTitle('CUSTOMER', yPos + 4, cL);
+    let ry = yPos + 15;
+    kv('Name',  passenger.name,                   cL + 5, cL + 22, ry, cW - 24); ry += 8;
+    kv('Email', passenger.email,                  cL + 5, cL + 22, ry, cW - 24); ry += 8;
+    kv('Phone', (passenger as any).phone || '—',  cL + 5, cL + 22, ry, cW - 24);
+
+    // Right — Booking
+    sectionTitle('BOOKING', yPos + 4, cR);
+    ry = yPos + 15;
+    const vType = booking.vehicle_type.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+    kv('Vehicle',  vType,                                           cR + 5, cR + 22, ry, cW - 24); ry += 8;
+    kv('Type', booking.trip_type === 'to_airport' ? 'To Airport' : 'From Airport',
+       cR + 5, cR + 22, ry, cW - 24); ry += 8;
+    if (booking.distance_km) {
+      kv('Distance',
+        `${booking.distance_km} km${booking.duration_minutes ? ` (~${booking.duration_minutes} min)` : ''}`,
+        cR + 5, cR + 22, ry, cW - 24);
     }
-    
-    // Payment Summary Section
-    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-    doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 35, 2, 2, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAYMENT SUMMARY', margin + 5, yPos + 10);
-    
-    doc.setFontSize(10);
+
+    yPos += cardH + 5;
+
+    // JOURNEY CARD
+    const puLines = doc.splitTextToSize(pickupLoc,  pageWidth - m * 2 - 18) as string[];
+    const doLines = doc.splitTextToSize(dropoffLoc, pageWidth - m * 2 - 18) as string[];
+    const journeyH = 18 + (puLines.length + doLines.length) * 5 + 6;
+
+    doc.setFillColor(slate100[0], slate100[1], slate100[2]);
+    doc.roundedRect(m, yPos, pageWidth - m * 2, journeyH, 2, 2, 'F');
+    sectionTitle('JOURNEY', yPos + 4);
+
+    const dotX = m + 7;
+    const puY  = yPos + 17;
+    const doY  = puY + puLines.length * 5 + 7;
+
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.circle(dotX, puY, 1.5, 'F');
+
+    doc.setDrawColor(slate400[0], slate400[1], slate400[2]);
+    doc.setLineWidth(0.4);
+    doc.setLineDashPattern([1.2, 1.2], 0);
+    doc.line(dotX, puY + 2.5, dotX, doY - 2.5);
+    doc.setLineDashPattern([], 0);
+
+    doc.setFillColor(green[0], green[1], green[2]);
+    doc.circle(dotX, doY, 1.5, 'F');
+
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('Base Fare:', margin + 5, yPos + 19);
+    doc.setTextColor(slate400[0], slate400[1], slate400[2]);
+    doc.text('FROM', dotX + 4, puY - 2);
     doc.setFont('helvetica', 'bold');
-    doc.text('Rs ' + Math.round(Number(booking.base_fare)).toString(), pageWidth - margin - 5, yPos + 19, { align: 'right' });
-    
-    // Divider line
+    doc.setTextColor(navy[0], navy[1], navy[2]);
+    doc.text(puLines, dotX + 4, puY + 1);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(slate400[0], slate400[1], slate400[2]);
+    doc.text('TO', dotX + 4, doY - 2);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(navy[0], navy[1], navy[2]);
+    doc.text(doLines, dotX + 4, doY + 1);
+
+    yPos += journeyH + 5;
+
+    // FARE BOX
+    const fareH = 38;
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.roundedRect(m, yPos, pageWidth - m * 2, fareH, 3, 3, 'F');
+
     doc.setDrawColor(255, 255, 255);
     doc.setLineWidth(0.3);
-    doc.line(margin + 5, yPos + 22, pageWidth - margin - 5, yPos + 22);
-    
-    doc.setFontSize(12);
+    doc.line(m + 5, yPos + fareH - 16, pageWidth - m - 5, yPos + fareH - 16);
+
+    doc.setTextColor(lightBlue[0], lightBlue[1], lightBlue[2]);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL AMOUNT:', margin + 5, yPos + 30);
-    doc.setFontSize(14);
-    doc.text('Rs ' + Math.round(Number(booking.total_amount)).toString(), pageWidth - margin - 5, yPos + 30, { align: 'right' });
-    
-    yPos += 42;
-    
-    // Important Note
+    doc.text('PAYMENT SUMMARY', m + 5, yPos + 8);
+
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(wh[0], wh[1], wh[2]);
+    doc.text('Base Fare', m + 5, yPos + 17);
+    doc.text('Rs ' + Math.round(Number(financial.base_fare)).toLocaleString('en-IN'),
+             pageWidth - m - 5, yPos + 17, { align: 'right' });
+
+    doc.setFontSize(8);
+    doc.setTextColor(lightBlue[0], lightBlue[1], lightBlue[2]);
+    doc.text('Taxes & Fees', m + 5, yPos + 24);
+    doc.text('Included', pageWidth - m - 5, yPos + 24, { align: 'right' });
+
+    doc.setTextColor(wh[0], wh[1], wh[2]);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL PAYABLE', m + 5, yPos + 33);
+    doc.setFontSize(14);
+    doc.text('Rs ' + Math.round(Number(financial.total_amount)).toLocaleString('en-IN'),
+             pageWidth - m - 5, yPos + 33, { align: 'right' });
+
+    yPos += fareH + 5;
+
+    // DISCLAIMER
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(220, 38, 38);
-    doc.text('* Additional charges may apply (toll, parking as applicable)', pageWidth / 2, yPos, { align: 'center' });
-    
+    doc.text('* Toll, parking & additional surcharges may apply as applicable.',
+             pageWidth / 2, yPos + 3, { align: 'center' });
     yPos += 10;
-    
-    // Terms & Conditions
-    doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+
+    // TERMS
     const terms = [
-      '• Please arrive 5 minutes before scheduled pickup time',
-      '• Cancellation charges may apply as per policy',
-      '• Driver details will be shared 30 minutes before pickup',
-      '• For any queries, contact us at +91 98806 91116'
+      '• Arrive 5 minutes before your scheduled pickup time.',
+      '• Driver details will be shared ~30 minutes before pickup.',
+      '• Cancellation charges apply as per cancellation policy.',
+      '• For support: +91 98806 91116  |  support@airlinecabz.com',
     ];
-    
-    terms.forEach((term, index) => {
-      doc.text(term, margin, yPos + (index * 5));
-    });
-    
-    yPos += 25; // Add spacing after terms
-    
-    // Separator line
-    doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.setLineWidth(0.3);
-    doc.line(margin, yPos, pageWidth - margin, yPos);
-    
-    yPos += 8; // Space after line
-    
-    // Footer text
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(slate400[0], slate400[1], slate400[2]);
+    terms.forEach((t, i) => doc.text(t, m, yPos + i * 5.5));
+    yPos += terms.length * 5.5 + 4;
+
+    // FOOTER BAR
+    const footerY = pageHeight - 16;
+    doc.setFillColor(navy[0], navy[1], navy[2]);
+    doc.rect(0, footerY, pageWidth, 16, 'F');
+    doc.setFillColor(blue[0], blue[1], blue[2]);
+    doc.rect(0, footerY, 3, 16, 'F');
+
+    doc.setTextColor(wh[0], wh[1], wh[2]);
     doc.setFontSize(8);
-    doc.setTextColor(lightGray[0], lightGray[1], lightGray[2]);
-    doc.text('Thank you for choosing Airlinecabz!', pageWidth / 2, yPos, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.text('Thank you for choosing Airlinecabz!', m, footerY + 6);
     doc.setFontSize(7);
-    doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, pageWidth / 2, yPos + 4, { align: 'center' });
-    doc.text('www.airlincabz.com', pageWidth / 2, yPos + 8, { align: 'center' });
-    
-    // Save the PDF
-    doc.save(`Airlinecabz-Booking-${booking.id.slice(0, 8)}.pdf`);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(slate400[0], slate400[1], slate400[2]);
+    doc.text(
+      `www.airlinecabz.com  |  Generated: ${new Date().toLocaleString('en-IN')}`,
+      m, footerY + 12
+    );
+    doc.text('Page 1 of 1', pageWidth - m, footerY + 9, { align: 'right' });
+
+    // SAVE
+    doc.save(`Airlinecabz-Invoice-${booking.id.slice(0, 8).toUpperCase()}.pdf`);
   };
 
   if (loading) {
@@ -317,6 +354,11 @@ function BookingConfirmationContent() {
   }
 
   if (!booking) return null;
+
+  const passenger = (Array.isArray(booking.passengers) ? booking.passengers[0] : booking.passengers) || { name: 'Guest', email: '' };
+  const financial = (Array.isArray(booking.financials) ? booking.financials[0] : booking.financials) || { base_fare: 0, total_amount: 0 };
+  const pickupLoc = booking.pickup_address?.text_location || 'N/A';
+  const dropoffLoc = booking.dropoff_address?.text_location || 'N/A';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-12 px-4">
@@ -348,8 +390,8 @@ function BookingConfirmationContent() {
           <div className="space-y-4">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase mb-1">Customer</p>
-              <p className="text-lg font-bold text-slate-900">{booking.customer_name}</p>
-              <p className="text-sm text-slate-600">{booking.customer_email}</p>
+              <p className="text-lg font-bold text-slate-900">{passenger.name}</p>
+              <p className="text-sm text-slate-600">{passenger.email}</p>
             </div>
 
             <div>
@@ -364,13 +406,13 @@ function BookingConfirmationContent() {
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined text-green-600 mt-1">location_on</span>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-900">{booking.pickup_location}</p>
+                  <p className="font-semibold text-slate-900">{pickupLoc}</p>
                   <div className="flex items-center gap-2 my-2">
                     <div className="flex-1 border-t-2 border-dashed border-slate-300"></div>
                     <span className="material-symbols-outlined text-slate-400 text-sm">arrow_forward</span>
                     <div className="flex-1 border-t-2 border-dashed border-slate-300"></div>
                   </div>
-                  <p className="font-semibold text-slate-900">{booking.dropoff_location}</p>
+                  <p className="font-semibold text-slate-900">{dropoffLoc}</p>
                 </div>
               </div>
             </div>
@@ -378,7 +420,7 @@ function BookingConfirmationContent() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase mb-1">Pickup Date & Time</p>
-                <p className="text-sm font-semibold text-slate-900">{new Date(booking.pickup_date).toLocaleString()}</p>
+                <p className="text-sm font-semibold text-slate-900">{new Date(booking.pickup_time).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-500 uppercase mb-1">Vehicle</p>
@@ -406,12 +448,12 @@ function BookingConfirmationContent() {
             <div className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-bold text-slate-700">Base Fare</span>
-                <span className="text-lg font-bold text-slate-900">₹{Number(booking.base_fare).toFixed(2)}</span>
+                <span className="text-lg font-bold text-slate-900">₹{Number(financial.base_fare).toFixed(2)}</span>
               </div>
               <div className="border-t border-blue-200 pt-2 mt-2">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-bold text-slate-900">Total Amount</span>
-                  <span className="text-2xl font-extrabold text-blue-600">₹{Number(booking.total_amount).toFixed(2)}</span>
+                  <span className="text-2xl font-extrabold text-blue-600">₹{Number(financial.total_amount).toFixed(2)}</span>
                 </div>
               </div>
               <p className="text-xs text-slate-600 mt-2">*Additional charges may apply (toll, parking)</p>
