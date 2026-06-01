@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { insforge } from "@/lib/insforge";
+import AuthModal from "@/components/AuthModal";
 
 const navLinks = [
   { href: "/", label: "Home", icon: "home" },
@@ -34,8 +36,35 @@ function handleHashLink(href: string, close?: () => void) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    insforge.auth.getCurrentUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      }
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    await insforge.auth.signOut();
+    setUser(null);
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await insforge.auth.signInWithOAuth({
+        provider: 'google',
+        redirectTo: `${window.location.origin}/`,
+      });
+    } catch (err: any) {
+      console.error("Auth error:", err.message);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -74,6 +103,14 @@ export default function Navbar() {
           : "py-4 bg-transparent"
       }`}
     >
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          router.push("/book");
+        }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -157,14 +194,43 @@ export default function Navbar() {
             <span>Call</span>
           </a>
 
-          {/* Book Online — desktop */}
-          <Link
-            href="/book"
-            className="bg-brandBlue text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-brand hover:bg-blue-700 transition-all hidden md:flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[16px]">calendar_month</span>
-            Book Online
-          </Link>
+          {/* User Profile / Sign In */}
+          <div className="hidden md:block">
+            {user ? (
+              <div className="relative group">
+                <button className="flex items-center gap-2 focus:outline-none">
+                  <Image 
+                    src={user.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                    alt="User Avatar"
+                    width={38}
+                    height={38}
+                    className={`rounded-full border-2 object-cover ${scrolled ? 'border-brandBlue/20' : 'border-white/50'}`}
+                  />
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+                  <div className="p-4 border-b border-slate-50 bg-slate-50/50 rounded-t-2xl">
+                    <p className="text-sm font-bold text-slate-800 truncate">{user.profile?.name || 'Customer'}</p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
+                  </div>
+                  <div className="p-2">
+                    <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl font-semibold transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                  scrolled ? "bg-slate-100 text-brandDark hover:bg-slate-200" : "bg-white/20 text-white hover:bg-white/30 backdrop-blur-md"
+                }`}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
 
           {/* Hamburger */}
           <button
@@ -200,23 +266,49 @@ export default function Navbar() {
       >
         <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden mt-2">
           {/* Quick actions row */}
-          <div className="grid grid-cols-2 gap-0 border-b border-slate-100">
+          <div className="border-b border-slate-100">
             <a
               href="tel:+919880691116"
-              className="flex items-center justify-center gap-2 py-4 text-green-600 font-bold text-sm border-r border-slate-100 active:bg-green-50"
+              className="flex items-center justify-center gap-2 py-4 text-green-600 font-bold text-sm active:bg-green-50 w-full"
               onClick={() => setMobileOpen(false)}
             >
               <span className="material-symbols-outlined text-[20px]">call</span>
               Call Now
             </a>
-            <Link
-              href="/book"
-              className="flex items-center justify-center gap-2 py-4 text-brandBlue font-bold text-sm active:bg-blue-50"
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className="material-symbols-outlined text-[20px]">calendar_month</span>
-              Book Online
-            </Link>
+          </div>
+
+          {/* Mobile Auth Row */}
+          <div className="border-b border-slate-100 px-5 py-4 bg-slate-50">
+            {user ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Image 
+                    src={user.profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+                    alt="User"
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-white shadow-sm"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{user.profile?.name || 'Customer'}</p>
+                    <p className="text-xs text-slate-500">{user.email}</p>
+                  </div>
+                </div>
+                <button onClick={handleSignOut} className="p-2 text-red-500 hover:bg-red-50 rounded-xl">
+                  <span className="material-symbols-outlined">logout</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleSignIn();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-brandDark text-white rounded-xl font-bold text-sm shadow-md"
+              >
+                Sign In / Register
+              </button>
+            )}
           </div>
 
           {/* Nav Links */}

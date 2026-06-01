@@ -2,10 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/AuthModal";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { SplitText } from "@/components/animations/SplitText";
+import { BlurFade } from "@/components/animations/BlurFade";
+import { ScrollProgressTaxi } from "@/components/animations/ScrollProgressTaxi";
 import {
   Accordion,
   AccordionContent,
@@ -123,7 +128,7 @@ function VehicleImage({ src, alt, highlight }: { src: string; alt: string; highl
         src={src}
         alt={alt}
         fill
-        className="object-contain p-2 drop-shadow-md"
+        className="object-contain p-2 drop-shadow-md transition-all duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 group-hover:translate-x-3"
         sizes="(max-width: 640px) 100vw, 300px"
       />
     </div>
@@ -149,8 +154,11 @@ function VehicleActionButtons({ vehicle, price, highlight }: { vehicle: string; 
         </svg>
         <span className="whitespace-nowrap">WhatsApp</span>
       </a>
-      <Link
-        href={`/book?vehicle=${encodeURIComponent(vehicle)}`}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("triggerBooking", { detail: `/book?vehicle=${encodeURIComponent(vehicle)}` }));
+        }}
         className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
           highlight
             ? "bg-white/80 text-brandBlue hover:bg-white"
@@ -159,16 +167,51 @@ function VehicleActionButtons({ vehicle, price, highlight }: { vehicle: string; 
       >
         <span className="material-symbols-outlined text-[13px] sm:text-[14px] flex-shrink-0">calendar_month</span>
         <span className="whitespace-nowrap">Book Online</span>
-      </Link>
+      </button>
     </div>
   );
 }
+
+const testimonials = [
+  { name: "Rajesh Kumar", rating: 5, text: "Excellent service! The Innova Crysta was very clean and the driver arrived 15 minutes before the scheduled time for my early morning flight.", role: "Frequent Traveler" },
+  { name: "Priya Sharma", rating: 5, text: "Very professional and safe. As a solo female traveler taking a late-night cab from the airport, I felt completely secure. Highly recommended.", role: "Business Analyst" },
+  { name: "Amit Patel", rating: 5, text: "Booked an outstation trip to Coorg. The pricing was completely transparent with no hidden charges, and the driver knew all the good restaurants on the way.", role: "Family Vacation" },
+  { name: "Sneha Reddy", rating: 5, text: "The booking process is so seamless! Got instant confirmation and the WhatsApp updates are very helpful. Will definitely use Airlinecabz again.", role: "Tech Lead" },
+  { name: "Karthik Iyer", rating: 5, text: "Best airport taxi service in Bangalore. I used to rely on ride-hailing apps but their cancellations were a nightmare. Airlinecabz is 100% reliable.", role: "Marketing Director" },
+];
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<Tab>("airport");
   const [tripType, setTripType] = useState("One Way");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  
+  const router = useRouter();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState("/book");
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    import("@/lib/insforge").then(({ insforge }) => {
+      insforge.auth.getCurrentUser().then(({ data }) => {
+        if (data?.user) setUser(data.user);
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent).detail || "/book";
+      if (!user) {
+        setPendingUrl(url);
+        setShowAuthModal(true);
+      } else {
+        router.push(url);
+      }
+    };
+    window.addEventListener("triggerBooking", handler);
+    return () => window.removeEventListener("triggerBooking", handler);
+  }, [user, router]);
 
   // Handle hash on load and listen for tab switch events
   useEffect(() => {
@@ -200,7 +243,16 @@ export default function LandingPage() {
 
   return (
     <>
+      <ScrollProgressTaxi />
       <Navbar />
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          router.push(pendingUrl);
+        }}
+      />
 
       {/* ═══ FULL-BLEED HERO ═══ */}
       <section className="relative w-full min-h-[88svh] sm:min-h-[600px] sm:h-[100svh] sm:max-h-[900px] overflow-hidden">
@@ -222,26 +274,32 @@ export default function LandingPage() {
             <p className="text-white/60 text-[11px] sm:text-sm font-semibold tracking-[0.15em] uppercase mb-2 sm:mb-3 drop-shadow">
               airlinecabz — Nearest Airport Taxi
             </p>
-            <h1 className="text-[2.6rem] sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-2xl">
-              Nearest Cab
+            <h1 className="text-[2.6rem] sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight drop-shadow-2xl mb-2">
+              <SplitText text="Nearest Cab" delay={0.04} />
               <br />
-              <span className="text-amber-300">Near You</span>
+              <span className="text-amber-300">
+                <SplitText text="Near You" delay={0.04} />
+              </span>
               <br />
-              <span className="text-2xl sm:text-5xl lg:text-6xl">24/7 Airport Taxi</span>
+              <span className="text-2xl sm:text-5xl lg:text-6xl text-white/90">
+                <SplitText text="24/7 Airport Taxi" delay={0.04} />
+              </span>
             </h1>
             <p className="mt-3 sm:mt-4 text-white/75 text-sm sm:text-base max-w-md leading-relaxed drop-shadow">
               Book nearest airport taxi in Bangalore — safe, on time.
               <span className="font-bold text-amber-300"> Starting at ₹799.</span>
             </p>
-            {/* CTA row — side by side on mobile too */}
             <div className="mt-5 sm:mt-6 flex flex-row items-center gap-3 flex-wrap">
-              <Link
-                href="/book"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.dispatchEvent(new CustomEvent("triggerBooking", { detail: "/book" }));
+                }}
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-brandBlue to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-brandBlue/40 active:scale-95 animate-pulse-slow"
               >
                 <span className="material-symbols-outlined text-[18px]">directions_car</span>
                 Book Online
-              </Link>
+              </button>
               <a
                 href="tel:+919880691116"
                 className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold text-sm px-5 py-3.5 rounded-2xl transition-all shadow-lg shadow-green-500/40 active:scale-95"
@@ -289,7 +347,7 @@ export default function LandingPage() {
 
         {/* ═══ PRICING SECTION ═══ */}
         <section id="cars" className="py-12 sm:py-20 bg-transparent">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 w-full">
             <div className="text-center mb-6 sm:mb-10">
               <span className="inline-block text-brandBlue bg-brandBlue/5 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">Our Fleet</span>
               <h2 className="font-headline text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3 text-brandDark">
@@ -323,10 +381,10 @@ export default function LandingPage() {
                   {airportPrices.map((item) => (
                     <div
                       key={item.vehicle}
-                      className={`relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                      className={`group relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl backdrop-blur-xl ${
                         item.highlight
-                          ? "bg-brandBlue text-white shadow-brand border-blue-400"
-                          : "bg-white shadow-soft border-slate-100 hover:border-brandBlue/30"
+                          ? "bg-brandBlue/90 text-white shadow-[0_0_40px_rgba(37,75,255,0.4)] border-white/20"
+                          : "bg-white/80 shadow-lg border-white/50 hover:border-brandBlue/50"
                       }`}
                     >
                       {item.highlight && (
@@ -359,10 +417,10 @@ export default function LandingPage() {
                   {outstationPrices.map((item) => (
                     <div
                       key={item.vehicle}
-                      className={`relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                      className={`group relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl backdrop-blur-xl ${
                         item.highlight
-                          ? "bg-brandBlue text-white shadow-brand border-blue-400"
-                          : "bg-white shadow-soft border-slate-100 hover:border-brandBlue/30"
+                          ? "bg-brandBlue/90 text-white shadow-[0_0_40px_rgba(37,75,255,0.4)] border-white/20"
+                          : "bg-white/80 shadow-lg border-white/50 hover:border-brandBlue/50"
                       }`}
                     >
                       {item.highlight && (
@@ -395,10 +453,10 @@ export default function LandingPage() {
                   {localPrices.map((item) => (
                     <div
                       key={item.vehicle}
-                      className={`relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                      className={`group relative rounded-3xl p-5 border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl backdrop-blur-xl ${
                         item.highlight
-                          ? "bg-brandBlue text-white shadow-brand border-blue-400"
-                          : "bg-white shadow-soft border-slate-100 hover:border-brandBlue/30"
+                          ? "bg-brandBlue/90 text-white shadow-[0_0_40px_rgba(37,75,255,0.4)] border-white/20"
+                          : "bg-white/80 shadow-lg border-white/50 hover:border-brandBlue/50"
                       }`}
                     >
                       {item.highlight && (
@@ -442,6 +500,95 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ═══ TESTIMONIALS (NEW) ═══ */}
+        <section className="py-16 sm:py-24 bg-slate-50/50 overflow-hidden">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="text-center mb-12 sm:mb-16 px-4">
+              <span className="inline-block text-brandBlue bg-brandBlue/5 border border-brandBlue/10 text-[11px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">Wall of Love</span>
+              <h2 className="font-headline text-3xl sm:text-5xl font-extrabold tracking-tight mb-3 text-brandDark">
+                Loved by Travelers
+              </h2>
+              <p className="text-slate-500 max-w-lg mx-auto text-sm sm:text-base">
+                Don't just take our word for it. See what our customers say about our reliable 5-star service.
+              </p>
+            </div>
+            
+            <div 
+              className="relative flex flex-col gap-6 sm:gap-8 py-4"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)'
+              }}
+            >
+              {/* Row 1 */}
+              <div className="flex shrink-0 animate-marquee hover:[animation-play-state:paused] gap-6 sm:gap-8 px-4 w-max">
+                {[...testimonials, ...testimonials].map((t, idx) => (
+                  <div 
+                    key={`row1-${idx}`} 
+                    className="relative w-[320px] sm:w-[420px] bg-white border border-slate-100 rounded-[2rem] p-7 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,75,255,0.08)] transition-all duration-300 shrink-0 cursor-default group overflow-hidden"
+                  >
+                    <div className="absolute -top-6 -right-2 text-slate-50 opacity-50 font-serif text-[140px] leading-none select-none group-hover:text-brandBlue/5 transition-colors duration-500">
+                      "
+                    </div>
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="flex items-center gap-1 mb-5">
+                        {[...Array(t.rating)].map((_, i) => (
+                          <span key={i} className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                        ))}
+                      </div>
+                      <p className="text-slate-700 text-[15px] sm:text-base leading-relaxed mb-8 font-medium">
+                        "{t.text}"
+                      </p>
+                      <div className="flex items-center gap-4 mt-auto">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brandBlue to-blue-400 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-brandBlue/20">
+                          {t.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-brandDark text-[15px] tracking-tight">{t.name}</p>
+                          <p className="text-[13px] text-slate-500 font-medium">{t.role}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Row 2 (Reverse) */}
+              <div className="flex shrink-0 animate-marquee-reverse hover:[animation-play-state:paused] gap-6 sm:gap-8 px-4 w-max">
+                {[...testimonials, ...testimonials].reverse().map((t, idx) => (
+                  <div 
+                    key={`row2-${idx}`} 
+                    className="relative w-[320px] sm:w-[420px] bg-white border border-slate-100 rounded-[2rem] p-7 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(37,75,255,0.08)] transition-all duration-300 shrink-0 cursor-default group overflow-hidden"
+                  >
+                    <div className="absolute -top-6 -right-2 text-slate-50 opacity-50 font-serif text-[140px] leading-none select-none group-hover:text-emerald-500/5 transition-colors duration-500">
+                      "
+                    </div>
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="flex items-center gap-1 mb-5">
+                        {[...Array(t.rating)].map((_, i) => (
+                          <span key={i} className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                        ))}
+                      </div>
+                      <p className="text-slate-700 text-[15px] sm:text-base leading-relaxed mb-8 font-medium">
+                        "{t.text}"
+                      </p>
+                      <div className="flex items-center gap-4 mt-auto">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-emerald-500/20">
+                          {t.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-brandDark text-[15px] tracking-tight">{t.name}</p>
+                          <p className="text-[13px] text-slate-500 font-medium">{t.role}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ═══ WHY BOOK WITH US ═══ */}
         <section id="futures" className="py-14 sm:py-20 bg-slate-50">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -455,17 +602,18 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-              {whyUs.map((item) => (
-                <div
-                  key={item.title}
-                  className="bg-white rounded-2xl p-5 sm:p-6 text-center border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-0.5"
-                >
-                  <div className="w-12 h-12 mx-auto bg-brandBlue/5 group-hover:bg-brandBlue/10 text-brandBlue rounded-xl flex items-center justify-center mb-4 transition-colors">
-                    <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
+              {whyUs.map((item, idx) => (
+                <BlurFade key={item.title} delay={0.1 * idx} inView>
+                  <div
+                    className="bg-white/80 backdrop-blur-md rounded-2xl p-5 sm:p-6 text-center border border-white/40 shadow-[0_4px_16px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] transition-all duration-300 group hover:-translate-y-0.5"
+                  >
+                    <div className="w-12 h-12 mx-auto bg-brandBlue/5 group-hover:bg-brandBlue/10 text-brandBlue rounded-xl flex items-center justify-center mb-4 transition-colors">
+                      <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
+                    </div>
+                    <h3 className="font-bold text-sm sm:text-base mb-1.5 text-slate-800">{item.title}</h3>
+                    <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                   </div>
-                  <h3 className="font-bold text-sm sm:text-base mb-1.5 text-slate-800">{item.title}</h3>
-                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
-                </div>
+                </BlurFade>
               ))}
             </div>
           </div>
@@ -485,19 +633,18 @@ export default function LandingPage() {
               {/* Connector Line for Desktop */}
               <div className="hidden md:block absolute top-8 left-[14%] right-[14%] h-[2px] bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
               {steps.map((step, idx) => (
-                <div
-                  key={step.title}
-                  className="relative text-center group"
-                >
-                  <div className="w-16 h-16 mx-auto bg-white border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.06)] rounded-2xl flex items-center justify-center mb-4 relative z-10 group-hover:scale-105 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-[24px] text-brandBlue">{step.icon}</span>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-brandDark text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
-                      {idx + 1}
+                <BlurFade key={step.title} delay={0.1 * idx} inView>
+                  <div className="relative text-center group">
+                    <div className="w-16 h-16 mx-auto bg-white border border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.06)] rounded-2xl flex items-center justify-center mb-4 relative z-10 group-hover:scale-105 transition-transform duration-300">
+                      <span className="material-symbols-outlined text-[24px] text-brandBlue">{step.icon}</span>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-brandDark text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm">
+                        {idx + 1}
+                      </div>
                     </div>
+                    <h3 className="font-bold text-sm sm:text-base mb-1 text-slate-800">{step.title}</h3>
+                    <p className="text-slate-400 text-xs sm:text-sm">{step.desc}</p>
                   </div>
-                  <h3 className="font-bold text-sm sm:text-base mb-1 text-slate-800">{step.title}</h3>
-                  <p className="text-slate-400 text-xs sm:text-sm">{step.desc}</p>
-                </div>
+                </BlurFade>
               ))}
             </div>
           </div>
@@ -662,13 +809,16 @@ export default function LandingPage() {
                     <span className="material-symbols-outlined text-[20px]">call</span>
                     +91 98806 91116
                   </a>
-                  <Link
-                    href="/book"
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.dispatchEvent(new CustomEvent("triggerBooking", { detail: "/book" }));
+                    }}
                     className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-2xl font-bold text-base hover:bg-white/15 transition-all inline-flex items-center justify-center gap-2 active:scale-95"
                   >
                     <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                     Book Online
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>

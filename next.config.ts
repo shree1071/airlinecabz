@@ -7,12 +7,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
-        pathname: "/aida-public/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        pathname: "/aida/**",
+        hostname: "api.dicebear.com",
+        pathname: "/**",
       },
     ],
     qualities: [100, 75, 50],

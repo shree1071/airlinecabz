@@ -137,11 +137,26 @@ const config: Config = {
           "0%, 100%": { boxShadow: "0 4px 14px rgba(37, 75, 255, 0.4)" },
           "50%": { boxShadow: "0 4px 24px rgba(37, 75, 255, 0.65)" },
         },
+        aurora: {
+          from: { backgroundPosition: "50% 50%, 50% 50%" },
+          to: { backgroundPosition: "350% 50%, 350% 50%" },
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "marquee-reverse": {
+          "0%": { transform: "translateX(-50%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "fade-in-up": "fade-in-up 0.6s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "pulse-slow": "pulse-slow 2.5s ease-in-out infinite",
+        aurora: "aurora 60s linear infinite",
+        marquee: "marquee 40s linear infinite",
+        "marquee-reverse": "marquee-reverse 40s linear infinite",
       },
     },
   },

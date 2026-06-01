@@ -10,7 +10,6 @@ export async function GET(
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
   
   try {
-    // SECURITY: Admin-only endpoint - verify authentication
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logSecurityViolation('Unauthorized access attempt to get booking', req);
@@ -19,7 +18,6 @@ export async function GET(
 
     const { id } = await params;
     
-    // SECURITY: Validate UUID format to prevent injection
     if (!isValidUUID(id)) {
       logSecurityViolation('Invalid booking ID format', req, { id });
       return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
@@ -27,7 +25,15 @@ export async function GET(
 
     const { data, error } = await insforge.database
       .from("bookings")
-      .select("*")
+      .select(`
+        *,
+        pickup_address:pickup_address_id(*),
+        dropoff_address:dropoff_address_id(*),
+        passengers:booking_passengers(*),
+        financials:booking_financials(*),
+        status_history:booking_status_history(*),
+        assignments:ride_assignments(*)
+      `)
       .eq("id", id)
       .single();
 
@@ -36,9 +42,33 @@ export async function GET(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
+    const passenger = data.passengers?.[0] || {};
+    const financial = data.financials?.[0] || {};
+    const latestStatus = data.status_history?.sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0] || {};
+
+    const flatBooking = {
+      ...data,
+      customer_name: passenger.name || '',
+      customer_email: passenger.email || '',
+      customer_phone: passenger.phone || '',
+      pickup_location: data.pickup_address?.text_location || '',
+      dropoff_location: data.dropoff_address?.text_location || '',
+      address_line1: data.pickup_address?.address_line1 || '',
+      address_line2: data.pickup_address?.address_line2 || '',
+      landmark: data.pickup_address?.landmark || '',
+      area: data.pickup_address?.area || '',
+      pincode: data.pickup_address?.pincode || '',
+      base_fare: financial.base_fare || 0,
+      taxes: financial.taxes || 0,
+      total_amount: financial.total_amount || 0,
+      status: latestStatus.status || 'pending',
+    };
+
     logger.logDataAccess('admin', 'bookings', 'read', ip);
 
-    return NextResponse.json({ booking: data });
+    return NextResponse.json({ booking: flatBooking });
   } catch (err) {
     logger.logError("Unexpected error in GET /api/bookings/[id]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -52,7 +82,6 @@ export async function PATCH(
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
   
   try {
-    // SECURITY: Admin-only endpoint - verify authentication
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logSecurityViolation('Unauthorized access attempt to update booking', req);
@@ -61,17 +90,14 @@ export async function PATCH(
 
     const { id } = await params;
     
-    // SECURITY: Validate UUID format to prevent injection
     if (!isValidUUID(id)) {
       logSecurityViolation('Invalid booking ID format', req, { id });
       return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
     }
 
     const body = await req.json();
-
-    // SECURITY: Whitelist allowed fields and validate values
-    const updateData: any = {};
     
+    // Instead of updating a status column in bookings, we append to booking_status_history
     if (body.status) {
       const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
       const sanitizedStatus = sanitizeInput(body.status);
@@ -80,29 +106,66 @@ export async function PATCH(
         return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
       }
       
-      updateData.status = sanitizedStatus;
-    }
-    
-    updateData.updated_at = new Date().toISOString();
+      const { error: historyErr } = await insforge.database
+        .from("booking_status_history")
+        .insert([{
+          booking_id: id,
+          status: sanitizedStatus,
+          notes: body.notes ? sanitizeInput(body.notes) : 'Status updated by admin'
+        }]);
 
-    const { data, error } = await insforge.database
+      if (historyErr) {
+        logger.logError("Error updating booking status", historyErr, `/api/bookings/${id}`);
+        return NextResponse.json({ error: "Failed to update booking status" }, { status: 500 });
+      }
+    }
+
+    // Fetch the updated booking to return
+    const { data: updatedData, error: fetchErr } = await insforge.database
       .from("bookings")
-      .update(updateData)
+      .select(`
+        *,
+        pickup_address:pickup_address_id(*),
+        dropoff_address:dropoff_address_id(*),
+        passengers:booking_passengers(*),
+        financials:booking_financials(*),
+        status_history:booking_status_history(*),
+        assignments:ride_assignments(*)
+      `)
       .eq("id", id)
-      .select();
+      .single();
 
-    if (error) {
-      logger.logError("Error updating booking", error, `/api/bookings/${id}`);
-      return NextResponse.json({ error: "Failed to update booking" }, { status: 500 });
+    if (fetchErr || !updatedData) {
+      return NextResponse.json({ error: "Booking not found after update" }, { status: 404 });
     }
 
-    if (!data || data.length === 0) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-    }
+    const passenger = updatedData.passengers?.[0] || {};
+    const financial = updatedData.financials?.[0] || {};
+    const latestStatus = updatedData.status_history?.sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0] || {};
+
+    const flatBooking = {
+      ...updatedData,
+      customer_name: passenger.name || '',
+      customer_email: passenger.email || '',
+      customer_phone: passenger.phone || '',
+      pickup_location: updatedData.pickup_address?.text_location || '',
+      dropoff_location: updatedData.dropoff_address?.text_location || '',
+      address_line1: updatedData.pickup_address?.address_line1 || '',
+      address_line2: updatedData.pickup_address?.address_line2 || '',
+      landmark: updatedData.pickup_address?.landmark || '',
+      area: updatedData.pickup_address?.area || '',
+      pincode: updatedData.pickup_address?.pincode || '',
+      base_fare: financial.base_fare || 0,
+      taxes: financial.taxes || 0,
+      total_amount: financial.total_amount || 0,
+      status: latestStatus.status || 'pending',
+    };
 
     logger.logDataAccess('admin', 'bookings', 'update', ip);
 
-    return NextResponse.json({ booking: data[0] });
+    return NextResponse.json({ booking: flatBooking });
   } catch (err) {
     logger.logError("Unexpected error in PATCH /api/bookings/[id]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
