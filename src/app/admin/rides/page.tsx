@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { insforge } from "@/lib/insforge";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// Dynamically import the leaflet map so it only renders on client
 const LeafletMap = dynamic(() => import("@/components/ui/leaflet-map"), { 
   ssr: false, 
   loading: () => (
@@ -22,29 +20,30 @@ const LeafletMap = dynamic(() => import("@/components/ui/leaflet-map"), {
   ) 
 });
 
-type RideStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
+type RideStatus = "pending" | "scheduled" | "in_progress" | "completed" | "cancelled" | "confirmed";
 type PaymentMethod = "cash" | "upi" | "corporate_invoice" | "prepaid_online";
 
-type ConfirmedRide = {
+type Assignment = {
+  driver_name: string;
+  driver_phone: string;
+  vehicle_number: string;
+};
+
+type Booking = {
   id: string;
-  booking_id: string;
   customer_name: string;
   customer_email: string;
-  customer_phone: string | null;
+  customer_phone: string;
   trip_type: string;
-  terminal?: string;
   pickup_location: string;
   dropoff_location: string;
   pickup_date: string;
   vehicle_type: string;
-  driver_name: string | null;
-  driver_phone: string | null;
-  vehicle_number: string | null;
   total_amount: number;
-  payment_method: string;
-  ride_status: RideStatus;
-  notes: string | null;
-  confirmed_at: string;
+  status: RideStatus;
+  assignments?: Assignment[];
+  financials?: { payment_method?: string };
+  payment_method?: string; // added to flat DTO potentially
 };
 
 const PAYMENT_METHODS = [
@@ -55,7 +54,9 @@ const PAYMENT_METHODS = [
 ];
 
 const STATUS_CONFIG: Record<RideStatus, { label: string; cls: string; dot: string; icon: React.ElementType }> = {
+  pending:     { label: "Pending",    cls: "bg-orange-50 text-orange-600 border-orange-200", dot: "bg-orange-400",   icon: AlertTriangle },
   scheduled:   { label: "Scheduled",  cls: "bg-slate-100 text-slate-600 border-slate-200",    dot: "bg-slate-400",   icon: Clock3        },
+  confirmed:   { label: "Confirmed",  cls: "bg-slate-100 text-slate-600 border-slate-200",    dot: "bg-slate-400",   icon: Clock3        },
   in_progress: { label: "Dispatched", cls: "bg-blue-50 text-blue-700 border-blue-200",       dot: "bg-blue-500",    icon: Car           },
   completed:   { label: "Completed",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle2  },
   cancelled:   { label: "Cancelled",  cls: "bg-red-50 text-red-600 border-red-200",          dot: "bg-red-500",     icon: XCircle       },
@@ -71,9 +72,8 @@ const fmtDate = (s: string) => {
   };
 };
 
-// ─── Badge ───────────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: RideStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.scheduled;
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border ${cfg.cls}`}>
@@ -83,21 +83,29 @@ function StatusBadge({ status }: { status: RideStatus }) {
   );
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
 export default function DispatchPage() {
   const router = useRouter();
-  const [rides, setRides]               = useState<ConfirmedRide[]>([]);
+  const [rides, setRides]               = useState<Booking[]>([]);
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState("");
   const [timeFilter, setTimeFilter]     = useState<"all"|"today"|"upcoming">("all");
   const [statusFilter, setStatusFilter] = useState<"active"|"completed">("active");
-  const [selected, setSelected]         = useState<ConfirmedRide | null>(null);
+  const [selected, setSelected]         = useState<Booking | null>(null);
   const [dialogOpen, setDialogOpen]     = useState(false);
 
   const fetchRides = useCallback(async () => {
-    const { data, error } = await insforge.database
-      .from("confirmed_rides").select("*").order("pickup_date", { ascending: true });
-    if (!error) setRides((data as ConfirmedRide[]) ?? []);
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      const res = await fetch("/api/bookings", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.bookings) {
+          setRides(data.bookings.sort((a: any, b: any) => new Date(a.pickup_date).getTime() - new Date(b.pickup_date).getTime()));
+        }
+      }
+    } catch(e) {}
     setLoading(false);
   }, []);
 
@@ -112,20 +120,24 @@ export default function DispatchPage() {
     const todayStart = new Date(); todayStart.setHours(0,0,0,0);
     const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(tomorrowStart.getDate()+1);
     return rides.filter(r => {
-      if (search) {
-        const t = search.toLowerCase();
-        if (![r.customer_name, r.customer_phone, r.driver_name, r.booking_id].some(v => v?.toLowerCase().includes(t))) return false;
-      }
-      if (statusFilter === "active" && r.ride_status === "completed") return false;
-      if (statusFilter === "completed" && r.ride_status !== "completed") return false;
+      const activeStatus = r.status !== "completed" && r.status !== "cancelled";
+      if (statusFilter === "active" && !activeStatus) return false;
+      if (statusFilter === "completed" && r.status !== "completed") return false;
+      
       const d = new Date(r.pickup_date);
       if (timeFilter === "today" && (d < todayStart || d >= tomorrowStart)) return false;
       if (timeFilter === "upcoming" && d < tomorrowStart) return false;
+
+      if (search) {
+        const t = search.toLowerCase();
+        const driverName = r.assignments?.[0]?.driver_name || "";
+        if (![r.customer_name, r.customer_phone, driverName, r.id].some(v => v?.toLowerCase().includes(t))) return false;
+      }
       return true;
     });
   }, [rides, search, timeFilter, statusFilter]);
 
-  const open = (ride: ConfirmedRide) => { setSelected(ride); setDialogOpen(true); };
+  const open = (ride: Booking) => { setSelected(ride); setDialogOpen(true); };
 
   return (
     <div className="min-h-screen bg-[#f6f7f9]">
@@ -152,10 +164,7 @@ export default function DispatchPage() {
       </header>
 
       <main className="max-w-[1400px] mx-auto px-5 py-5">
-
-        {/* Filter bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
-          {/* Time tabs */}
           <div className="flex items-center bg-white border border-slate-200 rounded-lg p-1 gap-1">
             {(["all","today","upcoming"] as const).map(f => (
               <button key={f} onClick={() => setTimeFilter(f)}
@@ -166,7 +175,6 @@ export default function DispatchPage() {
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            {/* Status tabs */}
             <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-1">
               {(["active","completed"] as const).map(f => (
                 <button key={f} onClick={() => setStatusFilter(f)}
@@ -176,7 +184,6 @@ export default function DispatchPage() {
               ))}
             </div>
 
-            {/* Search */}
             <div className="relative flex-1 sm:w-60">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input type="text" value={search} onChange={e => setSearch(e.target.value)}
@@ -186,7 +193,6 @@ export default function DispatchPage() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[960px]">
@@ -215,7 +221,9 @@ export default function DispatchPage() {
                   <tr><td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-400">No rides match your filters.</td></tr>
                 ) : filtered.map(ride => {
                   const dt = fmtDate(ride.pickup_date);
-                  const isUrgent = ride.ride_status === "scheduled" && dt.raw.getTime() - Date.now() < 7200000;
+                  const isUrgent = (ride.status === "scheduled" || ride.status === "pending") && dt.raw.getTime() - Date.now() < 7200000 && dt.raw.getTime() - Date.now() > 0;
+                  const driver = ride.assignments?.[0];
+                  
                   return (
                     <tr key={ride.id} onClick={() => open(ride)}
                       className={`group cursor-pointer transition-colors hover:bg-blue-50/40 ${isUrgent ? "bg-amber-50/30" : ""}`}>
@@ -248,10 +256,10 @@ export default function DispatchPage() {
                       </td>
 
                       <td className="px-5 py-3.5 align-top">
-                        {ride.driver_name ? (
+                        {driver?.driver_name ? (
                           <>
-                            <div className="text-sm font-medium text-slate-900">{ride.driver_name}</div>
-                            <div className="text-xs text-slate-400 mt-0.5">{ride.vehicle_number}</div>
+                            <div className="text-sm font-medium text-slate-900">{driver.driver_name}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">{driver.vehicle_number}</div>
                           </>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md">
@@ -262,11 +270,11 @@ export default function DispatchPage() {
 
                       <td className="px-5 py-3.5 align-top text-right">
                         <div className="font-semibold text-slate-900 text-sm">{fmt(ride.total_amount)}</div>
-                        <div className="text-xs text-slate-400 mt-0.5 capitalize">{ride.payment_method.replace(/_/g," ")}</div>
+                        <div className="text-xs text-slate-400 mt-0.5 capitalize">{ride.payment_method?.replace(/_/g," ") || "Cash"}</div>
                       </td>
 
                       <td className="px-5 py-3.5 align-top">
-                        <StatusBadge status={ride.ride_status} />
+                        <StatusBadge status={ride.status} />
                       </td>
                     </tr>
                   );
@@ -282,55 +290,70 @@ export default function DispatchPage() {
   );
 }
 
-// ─── Ride Dialog ──────────────────────────────────────────────────────────────
 function RideDialog({ ride, open, onClose, onUpdated }: {
-  ride: ConfirmedRide | null; open: boolean; onClose: () => void; onUpdated: () => void;
+  ride: Booking | null; open: boolean; onClose: () => void; onUpdated: () => void;
 }) {
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ driver_name:"", driver_phone:"", vehicle_number:"", payment_method:"cash" as PaymentMethod, base_amount:0, extras:0, ride_status:"scheduled" as RideStatus });
+  const [form, setForm] = useState({ 
+    driver_name:"", 
+    driver_phone:"", 
+    vehicle_number:"", 
+    payment_method:"cash" as PaymentMethod, 
+    base_amount:0, 
+    extras:0, 
+    ride_status:"pending" as RideStatus 
+  });
 
   useEffect(() => {
-    if (ride) setForm({ driver_name:ride.driver_name||"", driver_phone:ride.driver_phone||"", vehicle_number:ride.vehicle_number||"", payment_method:(ride.payment_method as PaymentMethod)||"cash", base_amount:ride.total_amount, extras:0, ride_status:ride.ride_status });
+    if (ride) {
+      const driver = ride.assignments?.[0];
+      setForm({ 
+        driver_name: driver?.driver_name || "", 
+        driver_phone: driver?.driver_phone || "", 
+        vehicle_number: driver?.vehicle_number || "", 
+        payment_method: (ride.payment_method as PaymentMethod) || "cash", 
+        base_amount: ride.total_amount, 
+        extras: 0, 
+        ride_status: ride.status 
+      });
+    }
   }, [ride]);
 
   const total = Number(form.base_amount) + Number(form.extras||0);
   const set = (k: keyof typeof form, v: any) => setForm(f => ({ ...f, [k]: v }));
 
-  const save = async () => {
+  const updateRideStatus = async (status: string, markCompleted = false) => {
     if (!ride) return; setSaving(true);
     try {
-      const { error } = await insforge.database.from("confirmed_rides").update({
-        driver_name: form.driver_name||null, driver_phone: form.driver_phone||null,
-        vehicle_number: form.vehicle_number||null, payment_method: form.payment_method,
-        ride_status: form.ride_status, total_amount: total,
-        ...(form.ride_status==="in_progress" ? { started_at: new Date().toISOString() } : {}),
-      }).eq("id", ride.id);
-      if (error) throw error;
-      toast.success("Saved successfully."); onUpdated(); onClose();
-    } catch { toast.error("Could not save changes."); }
-    finally { setSaving(false); }
+      const token = sessionStorage.getItem("adminToken");
+      const res = await fetch(`/api/bookings/${ride.id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          status,
+          driver_name: form.driver_name || undefined,
+          driver_phone: form.driver_phone || undefined,
+          vehicle_number: form.vehicle_number || undefined,
+          payment_method: form.payment_method,
+          total_amount: total,
+        })
+      });
+      if (!res.ok) throw new Error("Update failed");
+      toast.success(markCompleted ? "Ride completed and archived." : "Saved successfully.");
+      onUpdated();
+      onClose();
+    } catch { 
+      toast.error("Could not save changes."); 
+    } finally { 
+      setSaving(false); 
+    }
   };
 
-  const complete = async () => {
-    if (!ride) return; setSaving(true);
-    try {
-      const { error: ie } = await insforge.database.from("completed_rides").insert([{
-        booking_id: ride.booking_id, confirmed_ride_id: ride.id,
-        customer_name: ride.customer_name, customer_email: ride.customer_email,
-        customer_phone: ride.customer_phone, trip_type: ride.trip_type,
-        pickup_location: ride.pickup_location, dropoff_location: ride.dropoff_location,
-        pickup_date: ride.pickup_date, vehicle_type: ride.vehicle_type,
-        driver_name: form.driver_name||ride.driver_name, driver_phone: form.driver_phone||ride.driver_phone,
-        vehicle_number: form.vehicle_number||ride.vehicle_number,
-        total_amount: ride.total_amount, payment_method: form.payment_method,
-        actual_amount: total, completed_at: new Date().toISOString(),
-      }]);
-      if (ie) throw ie;
-      await insforge.database.from("confirmed_rides").delete().eq("id", ride.id);
-      toast.success("Ride completed and archived."); onUpdated(); onClose();
-    } catch { toast.error("Could not complete ride."); }
-    finally { setSaving(false); }
-  };
+  const save = () => updateRideStatus(form.ride_status);
+  const complete = () => updateRideStatus("completed", true);
 
   if (!ride) return null;
   const dt = fmtDate(ride.pickup_date);
@@ -340,7 +363,6 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent showCloseButton={false} className="!max-w-[900px] w-full p-0 gap-0 bg-white rounded-2xl shadow-2xl border-0 overflow-hidden">
         
-        {/* ── Header ─────────────────────────────────────────── */}
         <div className="flex items-start justify-between px-8 pt-6 pb-5 border-b border-slate-100 bg-slate-50/50">
           <div>
             <div className="flex items-center gap-3 mb-1.5">
@@ -355,16 +377,10 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
         </div>
 
         <div className="flex flex-col md:flex-row h-[600px] max-h-[75vh]">
-          
-          {/* ── Left Column: Read Only Info ────────────────────── */}
           <div className="w-full md:w-[45%] bg-slate-50/50 border-r border-slate-100 p-8 flex flex-col gap-8 overflow-y-auto">
-            
-            {/* Route Map */}
             <div className="w-full h-48 bg-slate-200/60 rounded-xl border border-slate-200/80 overflow-hidden relative group shadow-inner">
               <LeafletMap pickup={ride.pickup_location} dropoff={ride.dropoff_location} />
             </div>
-
-            {/* Route Details */}
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Trip Route</h3>
               <div className="flex items-stretch gap-4 relative">
@@ -385,8 +401,6 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                 </div>
               </div>
             </div>
-
-            {/* Customer Details */}
             <div>
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Passenger</h3>
               <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
@@ -405,14 +419,10 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                 </div>
               </div>
             </div>
-            
           </div>
 
-          {/* ── Right Column: Actionable Inputs ────────────────── */}
           <div className="w-full md:w-[55%] bg-white p-8 overflow-y-auto flex flex-col justify-between">
-            
             <div className="space-y-8">
-              {/* Driver Assignment */}
               <section>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest">Driver & Fleet</h3>
@@ -423,7 +433,6 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                     </a>
                   )}
                 </div>
-                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Driver Name</label>
@@ -448,10 +457,8 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                 </div>
               </section>
 
-              {/* Billing & Collection */}
               <section>
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Billing & Payment</h3>
-                
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-1 mb-4 grid grid-cols-4 gap-1">
                   {PAYMENT_METHODS.map(pm => {
                     const active = form.payment_method === pm.value;
@@ -463,7 +470,6 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                     );
                   })}
                 </div>
-
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm px-1">
                     <span className="text-slate-500 font-medium">Base Fare</span>
@@ -485,11 +491,10 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
                 </div>
               </section>
               
-              {/* Status Section */}
               <section>
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Dispatch Status</h3>
                 <div className="flex items-center gap-3">
-                  {(["scheduled","in_progress"] as RideStatus[]).map(s => {
+                  {(["scheduled","confirmed","in_progress"] as RideStatus[]).map(s => {
                     const cfg = STATUS_CONFIG[s];
                     const active = form.ride_status === s;
                     return (
@@ -504,7 +509,6 @@ function RideDialog({ ride, open, onClose, onUpdated }: {
               </section>
             </div>
 
-            {/* Actions */}
             <div className="pt-8 mt-8 border-t border-slate-100 flex items-center justify-between">
               <button onClick={onClose} className="text-sm font-bold text-slate-400 hover:text-slate-700 transition-colors px-2">Discard</button>
               <div className="flex gap-3">

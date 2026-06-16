@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { logger, logRequest, logSecurityViolation } from "@/lib/logger";
 import { sanitizeSQLInput } from "@/lib/auth";
+import { validateSession } from "@/lib/session-manager";
 
 export async function GET(req: Request) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
@@ -11,6 +12,13 @@ export async function GET(req: Request) {
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logSecurityViolation('Unauthorized access attempt to bookings', req);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const validation = validateSession(token);
+    if (!validation.valid) {
+      logSecurityViolation('Invalid session token', req);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -62,14 +70,15 @@ export async function GET(req: Request) {
 
     // Map 4NF nested structure to flat DTO for the frontend
     const mappedData = filteredData.map((b: any) => {
-      const passenger = b.passengers?.[0] || {};
-      const financial = b.financials?.[0] || {};
+      const passenger = Array.isArray(b.passengers) ? (b.passengers[0] || {}) : (b.passengers || {});
+      const financial = Array.isArray(b.financials) ? (b.financials[0] || {}) : (b.financials || {});
       const latestStatus = b.status_history?.sort((a: any, b: any) => 
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )[0] || {};
 
       return {
         ...b,
+        pickup_date: b.pickup_time || b.pickup_date,
         customer_name: passenger.name || '',
         customer_email: passenger.email || '',
         customer_phone: passenger.phone || '',
@@ -235,14 +244,15 @@ export async function POST(req: Request) {
       .eq('id', bookingId)
       .single();
 
-    const passenger = finalBooking.passengers?.[0] || {};
-    const financial = finalBooking.financials?.[0] || {};
+    const passenger = Array.isArray(finalBooking.passengers) ? (finalBooking.passengers[0] || {}) : (finalBooking.passengers || {});
+    const financial = Array.isArray(finalBooking.financials) ? (finalBooking.financials[0] || {}) : (finalBooking.financials || {});
     const latestStatus = finalBooking.status_history?.sort((a: any, b: any) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )[0] || {};
 
     const flatBooking = {
       ...finalBooking,
+      pickup_date: finalBooking.pickup_time || finalBooking.pickup_date,
       customer_name: passenger.name || '',
       customer_email: passenger.email || '',
       customer_phone: passenger.phone || '',

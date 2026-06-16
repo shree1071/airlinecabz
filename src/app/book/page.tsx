@@ -104,6 +104,20 @@ export default function BookingPage() {
     vehicle?: string;
   }>({});
 
+  // Recent routes from local storage
+  const [recentRoutes, setRecentRoutes] = useState<{pickup: string, dropoff: string}[]>([]);
+  
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('recentRoutes');
+      if (stored) {
+        setRecentRoutes(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Failed to parse recent routes', e);
+    }
+  }, []);
+
   // Calculate actual driving distance using OpenRouteService API
   const calculateDrivingDistance = async (startLat: number, startLng: number, endLat: number, endLng: number) => {
     setCalculatingDistance(true);
@@ -609,6 +623,7 @@ export default function BookingPage() {
     // If there are errors, set them and scroll to first error
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      triggerShake();
       
       // Scroll to first error
       const firstErrorField = Object.keys(newErrors)[0];
@@ -709,6 +724,19 @@ export default function BookingPage() {
 
       const booking = result.booking;
 
+      // Update recent routes
+      try {
+        const newRoute = { pickup: pickupText, dropoff: dropoffText };
+        const stored = localStorage.getItem('recentRoutes');
+        let routes = stored ? JSON.parse(stored) : [];
+        // Keep unique routes, max 3
+        routes = [newRoute, ...routes.filter((r: any) => r.pickup !== newRoute.pickup || r.dropoff !== newRoute.dropoff)].slice(0, 3);
+        localStorage.setItem('recentRoutes', JSON.stringify(routes));
+        setRecentRoutes(routes);
+      } catch (e) {
+        console.error('Failed to save recent routes', e);
+      }
+
       // Clean up local storage state
       localStorage.removeItem('bookingFormState');
 
@@ -760,7 +788,7 @@ export default function BookingPage() {
         </div>
       </header>
 
-      <main className="pt-20 md:pt-24 pb-32 px-4 max-w-4xl mx-auto">
+      <main className={`pt-20 md:pt-24 pb-32 px-4 max-w-4xl mx-auto ${shakeBtn ? 'form-shake' : ''}`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           <div className="lg:col-span-8 space-y-4 md:space-y-8">
@@ -921,6 +949,31 @@ export default function BookingPage() {
                 </div>
 
                 <div className="space-y-4">
+                  {recentRoutes.length > 0 && (
+                    <div className="mb-4">
+                      <label className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">history</span>
+                        Recent Routes
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {recentRoutes.map((route, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setPickupText(route.pickup);
+                              setDropoffText(route.dropoff);
+                            }}
+                            className="text-left bg-slate-50 border border-slate-200 hover:border-primary/30 hover:bg-primary/5 rounded-xl px-3 py-2 text-xs flex flex-col gap-0.5 transition-all w-full sm:w-auto flex-1 min-w-[150px]"
+                          >
+                            <span className="font-semibold text-slate-800 truncate block w-full">{route.pickup.split(',')[0]}</span>
+                            <span className="text-slate-400 text-[10px] truncate block w-full">to {route.dropoff.split(',')[0]}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {tripType === "to_airport" ? (
                     <>
                       <div>
@@ -1433,15 +1486,12 @@ export default function BookingPage() {
                     75%      { transform: translateX(-3px); }
                     90%      { transform: translateX(3px); }
                   }
-                  .btn-shake { animation: shake-x 0.55s ease-in-out; }
+                  .btn-shake, .form-shake .border-red-500 { animation: shake-x 0.55s ease-in-out; }
                 `}</style>
                 <button
-                  onClick={() => {
-                    if (!isFormValid) {
-                      triggerShake();
-                    } else {
-                      handleSubmit();
-                    }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit(e);
                   }}
                   disabled={submitting}
                   type="button"

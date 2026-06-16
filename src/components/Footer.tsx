@@ -103,7 +103,7 @@ export default function Footer() {
                 { label: "Blog", href: "#" },
                 { label: "Contact Us", href: "tel:+919880691116" },
                 { label: "Privacy Policy", href: "/privacy" },
-                { label: "Terms & Conditions", href: "#" },
+                { label: "Terms & Conditions", href: "/terms" },
               ].map((item) => (
                 <li key={item.label}>
                   <Link href={item.href} className="hover:text-white transition-colors hover:underline underline-offset-4">
@@ -131,14 +131,14 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-6 sm:pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-white/40 text-[10px] sm:text-xs">
             <p className="text-center md:text-left">
-              Copyright airlinecabz | All Rights Reserved {currentYear} | Nearest Airport Taxi Bangalore | Airport Cab Booking | Outstation Taxi Booking
+              &copy; {currentYear} Airlinecabz | All Rights Reserved | Nearest Airport Taxi Bangalore | Airport Cab Booking | Outstation Taxi Booking
             </p>
             <div className="hidden sm:flex gap-6">
               <Link href="#" className="hover:text-white transition-colors">About us</Link>
               <Link href="#" className="hover:text-white transition-colors">Blog</Link>
               <Link href="tel:+919880691116" className="hover:text-white transition-colors">Contact us</Link>
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="#" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
             </div>
           </div>
 

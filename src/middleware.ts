@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { handleCorsPreflightRequest, applyCorsHeaders, validateCorsRequest } from '@/lib/cors';
+import { Redis } from '@upstash/redis';
 
-// Rate limiting store (in production, use Redis or similar)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+// Redis client for rate limiting
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+});
 
 // Security headers
 const securityHeaders = {
@@ -31,37 +35,34 @@ const securityHeaders = {
 };
 
 // Rate limiting configuration
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_WINDOW = 60; // 1 minute in seconds
 const RATE_LIMIT_MAX_REQUESTS = 100; // 100 requests per minute
 
-function rateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = rateLimitStore.get(ip);
-
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+async function rateLimit(ip: string): Promise<boolean> {
+  // If Redis is not configured, we allow the request to prevent breaking functionality
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    console.warn('Redis is not configured for rate limiting. Skipping rate limit check.');
     return true;
   }
 
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
+  try {
+    const key = `ratelimit:${ip}`;
+    const count = await redis.incr(key);
+    
+    // Set expiry on the first request
+    if (count === 1) {
+      await redis.expire(key, RATE_LIMIT_WINDOW);
+    }
+    
+    return count <= RATE_LIMIT_MAX_REQUESTS;
+  } catch (error) {
+    console.error('Rate limit error:', error);
+    // Allow request if Redis fails to prevent taking down the app
+    return true;
   }
-
-  record.count++;
-  return true;
 }
 
-// Clean up old rate limit entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, record] of rateLimitStore.entries()) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(ip);
-    }
-  }
-}, RATE_LIMIT_WINDOW);
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Handle CORS preflight requests
   const preflightResponse = handleCorsPreflightRequest(request);
   if (preflightResponse) {
@@ -99,7 +100,8 @@ export function middleware(request: NextRequest) {
 
   // Apply rate limiting to API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    if (!rateLimit(ip)) {
+    const isAllowed = await rateLimit(ip);
+    if (!isAllowed) {
       return new NextResponse(
         JSON.stringify({ error: 'Too many requests. Please try again later.' }),
         {

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { logger, logSecurityViolation } from "@/lib/logger";
 import { isValidUUID, sanitizeInput } from "@/lib/auth";
+import { validateSession } from "@/lib/session-manager";
 
 export async function PUT(
   request: Request,
@@ -15,6 +16,13 @@ export async function PUT(
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logSecurityViolation('Unauthorized access attempt to update vehicle', request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const validation = validateSession(token);
+    if (!validation.valid) {
+      logSecurityViolation('Invalid session token', request);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -79,6 +87,13 @@ export async function DELETE(
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logSecurityViolation('Unauthorized access attempt to delete vehicle', request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const validation = validateSession(token);
+    if (!validation.valid) {
+      logSecurityViolation('Invalid session token', request);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
