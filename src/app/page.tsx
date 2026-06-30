@@ -257,7 +257,7 @@ export default function LandingPage() {
       {/* ═══ FULL-BLEED HERO ═══ */}
       <section className="relative w-full min-h-[88svh] sm:min-h-[600px] sm:h-[100svh] sm:max-h-[900px] overflow-hidden">
         <Image
-          src="/airport-terminal-hero.png"
+          src="/airport-terminal-hero.webp"
           alt="Bangalore Airport Terminal"
           fill
           className="object-cover object-[center_40%] sm:object-center"
