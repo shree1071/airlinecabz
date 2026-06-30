@@ -10,7 +10,7 @@ async function test() {
 
   const { data, error } = await resend.emails.send({
     from: "Airlinecabz Bookings <onboarding@resend.dev>",
-    to: ["shreeharshastark@gmail.com"],
+    to: ["airlinecabz@gmail.com"],
     subject: "🚕 New Booking: Test User → INNOVA on " + new Date().toLocaleDateString("en-IN"),
     html: `
       <div style="font-family:sans-serif;padding:32px;max-width:600px;margin:0 auto;background:#f8fafc;border-radius:16px;">
@@ -36,7 +36,7 @@ async function test() {
     console.error("❌ Failed:", JSON.stringify(error, null, 2));
   } else {
     console.log("✅ Email sent successfully! ID:", data.id);
-    console.log("📬 Check shreeharshastark@gmail.com inbox NOW (also check spam).");
+    console.log("📬 Check airlinecabz@gmail.com inbox NOW (also check spam).");
   }
 }
 
