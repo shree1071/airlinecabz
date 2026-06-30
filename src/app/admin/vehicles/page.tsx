@@ -224,10 +224,16 @@ export default function VehicleManagementPage() {
         vehicle_category: formData.vehicle_category,
       };
 
+      const token = sessionStorage.getItem("adminToken");
+      const headers: HeadersInit = { 
+        "Content-Type": "application/json",
+      };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       if (editingVehicle) {
         const res = await fetch(`/api/vehicles/${editingVehicle.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(vehicleData),
         });
 
@@ -236,7 +242,7 @@ export default function VehicleManagementPage() {
       } else {
         const res = await fetch("/api/vehicles", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(vehicleData),
         });
 
@@ -260,8 +266,13 @@ export default function VehicleManagementPage() {
     if (!confirm(`Are you sure you want to delete "${name}"?\n\nThis action cannot be undone.`)) return;
 
     try {
+      const token = sessionStorage.getItem("adminToken");
+      const headers: HeadersInit = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/vehicles/${id}`, {
         method: "DELETE",
+        headers,
       });
 
       // Check if response has content before parsing JSON

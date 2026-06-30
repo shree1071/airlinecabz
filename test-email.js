@@ -10,7 +10,7 @@ async function test() {
 
   const { data, error } = await resend.emails.send({
     from: "Airlinecabz Bookings <onboarding@resend.dev>",
-    to: ["airlinecabz@gmail.com"],
+    to: ["shreeharshastark@gmail.com"],
     subject: "🚕 New Booking: Test User → INNOVA on " + new Date().toLocaleDateString("en-IN"),
     html: `
       <div style="font-family:sans-serif;padding:32px;max-width:600px;margin:0 auto;background:#f8fafc;border-radius:16px;">

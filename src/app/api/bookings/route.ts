@@ -288,7 +288,9 @@ export async function POST(req: Request) {
     try {
       const { sendBookingNotificationEmail } = await import("@/lib/email");
       await sendBookingNotificationEmail(flatBooking);
-    } catch (emailError) {}
+    } catch (emailError) {
+      console.error("[Bookings API] Failed to send email notification:", emailError);
+    }
 
     return NextResponse.json({ booking: flatBooking });
   } catch (err: any) {

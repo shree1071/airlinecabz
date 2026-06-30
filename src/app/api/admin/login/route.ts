@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { logger, logAuthSuccess, logAuthFailure } from '@/lib/logger';
-import { generateSessionToken } from '@/lib/auth';
-import { 
-  isAccountLocked, 
-  getLockoutTimeRemaining, 
-  recordFailedLogin, 
-  clearFailedLogins 
+import {
+  isAccountLocked,
+  getLockoutTimeRemaining,
+  recordFailedLogin,
+  clearFailedLogins
 } from '@/lib/account-security';
 import { createSession, validateSession, invalidateSession } from '@/lib/session-manager';
 
@@ -73,12 +72,11 @@ export async function POST(request: Request) {
     // SECURITY: Clear failed login attempts on successful login
     clearFailedLogins(identifier);
 
-    // Generate secure session token with advanced session management
-    const token = generateSessionToken();
     const userAgent = request.headers.get('user-agent') || 'unknown';
     
-    // Create session with idle timeout and absolute expiry
-    const sessionData = createSession(token, 'admin', ip, userAgent);
+    // Create a stateless HMAC-signed session token (survives serverless cold starts)
+    const sessionData = createSession('', 'admin', ip, userAgent);
+    const token = (sessionData as any).token;
 
     logAuthSuccess(ip, 'admin');
 
@@ -89,7 +87,7 @@ export async function POST(request: Request) {
       sessionInfo: {
         createdAt: sessionData.createdAt,
         absoluteExpiry: sessionData.absoluteExpiry,
-        idleTimeout: 1800 // 30 minutes in seconds
+        idleTimeout: 86400,
       }
     });
 
