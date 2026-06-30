@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Header from "@/components/Header";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function PrivacyPolicy() {
@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <Header />
+      <Navbar />
       
       <main className="flex-1 pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-sm border border-slate-200 p-8 md:p-12">
